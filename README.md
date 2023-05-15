@@ -1,2 +1,2 @@
-# jenny-point-server
+# job-portal-api
  
