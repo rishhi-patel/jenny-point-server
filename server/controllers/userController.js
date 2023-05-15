@@ -67,7 +67,6 @@ const sendOTP = asyncHandler(async (req, res) => {
 const verifyOTP = asyncHandler(async (req, res) => {
   const { mobileNo, otp } = req.body
   const existUser = await User.findOne({ mobileNo }).select(["-password"])
-  const expiresIn = 12000
 
   if (existUser && existUser.otp === otp) {
     existUser.otp = null
@@ -75,11 +74,38 @@ const verifyOTP = asyncHandler(async (req, res) => {
     createSuccessResponse(
       res,
       {
-        token: generateToken(existUser._id, expiresIn),
+        token: generateToken(existUser._id),
       },
       200,
       "OTP verified  "
     )
+  } else {
+    res.status(400)
+    throw new Error("Invalid OTP")
+  }
+})
+// @desc    verify Admin
+// @route   POST /api/user/admin/verify-otp
+// @access  Public
+const verifyAdmin = asyncHandler(async (req, res) => {
+  const { mobileNo, otp } = req.body
+  const existUser = await User.findOne({ mobileNo }).select(["-password"])
+  if (existUser && existUser.otp === otp) {
+    if (existUser.isAdmin) {
+      existUser.otp = null
+      await existUser.save()
+      createSuccessResponse(
+        res,
+        {
+          token: generateToken(existUser._id),
+        },
+        200,
+        "OTP verified"
+      )
+    } else {
+      res.status(400)
+      throw new Error("Not Authorized as admin")
+    }
   } else {
     res.status(400)
     throw new Error("Invalid OTP")
@@ -228,4 +254,5 @@ module.exports = {
   updateCustomerDetails,
   blockUnBlockCustomer,
   deleteUserAccount,
+  verifyAdmin,
 }

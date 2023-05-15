@@ -8,6 +8,7 @@ const {
   updateCustomerDetails,
   deleteUserAccount,
   blockUnBlockCustomer,
+  verifyAdmin,
 } = require("../controllers/userController")
 
 const { protect, admin } = require("../middleware/authMiddleware")
@@ -17,6 +18,7 @@ module.exports = (router) => {
 
   router.route("/user/login").post(sendOTP)
   router.route("/user/verify-otp").post(verifyOTP)
+  router.route("/user/verify-admin").post(verifyAdmin)
 
   // private Routes
   router
