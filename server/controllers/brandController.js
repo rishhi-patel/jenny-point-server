@@ -19,7 +19,9 @@ const getBrand = asyncHandler(async (req, res) => {
       }
     : {}
 
-  const data = await Brand.find({ ...keyword })
+  const data = await Brand.find({ ...keyword }).sort({
+    updatedAt: -1,
+  })
   createSuccessResponse(res, data, 200)
 })
 
@@ -65,7 +67,9 @@ const updateBrand = asyncHandler(async (req, res) => {
     }
     result.name = name
     await result.save()
-    const updatedBrands = await Brand.find({})
+    const updatedBrands = await Brand.find({}).sort({
+      updatedAt: -1,
+    })
     createSuccessResponse(res, updatedBrands, 200, "Brand Updated")
   } else {
     res.status(404)
@@ -81,7 +85,9 @@ const deleteBrand = asyncHandler(async (req, res) => {
   const result = await Brand.findOne({ _id })
   if (result) {
     await result.remove()
-    const updatedBrands = await Brand.find({})
+    const updatedBrands = await Brand.find({}).sort({
+      updatedAt: -1,
+    })
     createSuccessResponse(res, updatedBrands, 200, "Brand Updated")
   } else {
     res.status(404)
