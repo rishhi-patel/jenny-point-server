@@ -80,7 +80,8 @@ const deleteBrand = asyncHandler(async (req, res) => {
   const result = await Brand.findOne({ _id })
   if (result) {
     await result.remove()
-    createSuccessResponse(res, null, 200, "Brand Updated")
+    const updatedBrands = await Brand.find({})
+    createSuccessResponse(res, updatedBrands, 200, "Brand Updated")
   } else {
     res.status(404)
     throw new Error(`No Brand found`)
