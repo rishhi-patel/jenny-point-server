@@ -213,7 +213,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const parent = await Category.findOne({ _id })
   if (parent) {
-    createSuccessResponse(res, parent, 200, "Category Created")
+    createSuccessResponse(res, parent, 200)
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)
