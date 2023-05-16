@@ -144,7 +144,7 @@ const createSubCategory = asyncHandler(async (req, res) => {
         new: true,
       }
     )
-    res.status(201).json(createdSubCategory)
+    createSuccessResponse(res, createdSubCategory, 201, "Category Created")
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)
@@ -171,7 +171,7 @@ const updateSubCategory = asyncHandler(async (req, res) => {
         new: true,
       }
     )
-    res.status(200).json(updatedSubCategory)
+    createSuccessResponse(res, updatedSubCategory, 200, "Category Updated")
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)
@@ -199,7 +199,7 @@ const deleteSubCategory = asyncHandler(async (req, res) => {
         new: true,
       }
     )
-    res.status(200).json(updatedSubCategory)
+    createSuccessResponse(res, updatedSubCategory, 200, "Category Deleted")
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)
@@ -213,7 +213,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const parent = await Category.findOne({ _id })
   if (parent) {
-    res.status(200).json(parent)
+    createSuccessResponse(res, parent, 200, "Category Created")
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)
