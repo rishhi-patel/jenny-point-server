@@ -7,7 +7,7 @@ const { createSuccessResponse } = require("../utils/utils.js")
 // @route   GET /api/products
 // @access  Private/Admin
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({})
+  const products = await Product.find({}).sort({ createdAt: -1 })
 
   if (products) {
     createSuccessResponse(res, products, 200)
@@ -41,7 +41,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   if (ObjectId.isValid(_id)) {
     await Product.findOneAndUpdate({ _id }, { ...req.body })
-    const products = await Product.find({})
+    const products = await Product.find({}).sort({ createdAt: -1 })
 
     if (products) {
       createSuccessResponse(res, products, 200, "Product Updated")
@@ -63,7 +63,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
   if (ObjectId.isValid(_id)) {
     await Product.findOneAndDelete({ _id })
-    const products = await Product.find({})
+    const products = await Product.find({}).sort({ createdAt: -1 })
     if (products) {
       createSuccessResponse(res, products, 200, "Product Deleted")
     } else {

@@ -22,7 +22,7 @@ const getCategories = asyncHandler(async (req, res) => {
 
   const count = await Category.countDocuments({})
   const data = await Category.find({ ...keyword }).sort({
-    updatedAt: -1,
+    createdAt: -1,
   })
   createSuccessResponse(res, data)
 })
@@ -91,7 +91,7 @@ const updateCategory = asyncHandler(async (req, res) => {
       result.name = name
       await result.save()
       const data = await Category.find({}).sort({
-        updatedAt: -1,
+        createdAt: -1,
       })
       createSuccessResponse(res, data, 200, "Category Updated")
     } else {
@@ -113,7 +113,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
   if (result) {
     await result.remove()
     const updatedCatrgories = await Category.find({}).sort({
-      updatedAt: -1,
+      createdAt: -1,
     })
     createSuccessResponse(res, updatedCatrgories, 200, "Category Deleted  ")
   } else {
