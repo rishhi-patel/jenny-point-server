@@ -75,4 +75,30 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error("Invalid Product ID")
   }
 })
-module.exports = { createProduct, updateProduct, getProducts, deleteProduct }
+// @desc    GET a product
+// @route   GET /api/products/:id
+// @access  Private/Admin
+const getProductById = asyncHandler(async (req, res) => {
+  const { _id } = req.params
+
+  if (ObjectId.isValid(_id)) {
+    const product = await Product.findOne({ _id })
+    if (product) {
+      createSuccessResponse(res, product, 200)
+    } else {
+      res.status(400)
+      throw new Error("Product Not Found")
+    }
+  } else {
+    res.status(400)
+    throw new Error("Invalid Product ID")
+  }
+})
+
+module.exports = {
+  createProduct,
+  updateProduct,
+  getProducts,
+  deleteProduct,
+  getProductById,
+}
