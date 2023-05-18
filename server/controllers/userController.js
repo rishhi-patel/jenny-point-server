@@ -154,9 +154,19 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   GET /api/user/
 // @access  Private
 const getCustomers = asyncHandler(async (req, res) => {
-  const customers = await User.find({ isAdmin: false }).select("-otp").sort({
-    createdAt: -1,
-  })
+  const keyword = req.query.keyword
+    ? {
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
+      }
+    : {}
+  const customers = await User.find({ ...keyword, isAdmin: false })
+    .select("-otp")
+    .sort({
+      createdAt: -1,
+    })
   if (customers) {
     createSuccessResponse(res, customers, 200)
   } else {
