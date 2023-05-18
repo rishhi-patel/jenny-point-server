@@ -27,6 +27,12 @@ const awsService = {
       })
     })
   },
+  deleteFile: (key) => {
+    s3.deleteObject({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+    })
+  },
   getPreSignedURL: async (fileKey) => {
     const getParams = {
       Bucket: process.env.AWS_S3_BUCKET,

@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler")
 const Product = require("../models/productModal.js")
 const ObjectId = require("mongoose").Types.ObjectId
 const { createSuccessResponse } = require("../utils/utils.js")
+const awsService = require("../utils/aws.js")
 
 // @desc  Get Products
 // @route   GET /api/products
@@ -95,10 +96,40 @@ const getProductById = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc    upload product image
+// @route   POST /api/products/upload
+// @access  Private/Admin
+const uploadImgToS3 = asyncHandler(async (req, res) => {
+  if (req.file) {
+    const result = await awsService.uploadFile(req)
+    if (result) {
+      createSuccessResponse(res, result, 201)
+    } else {
+      res.status(400)
+      throw new Error("something went Wrong")
+    }
+  } else {
+    res.status(400)
+    throw new Error("Invalid Image Type")
+  }
+})
+
+const deleteImage = asyncHandler(async (req, res) => {
+  const { key } = req.params
+  if (key) {
+    await awsService.deleteFile(key)
+    createSuccessResponse(res, null, 200, "Image Removed")
+  } else {
+    res.status(400)
+    throw new Error("Please Provide a key")
+  }
+})
 module.exports = {
   createProduct,
   updateProduct,
   getProducts,
   deleteProduct,
   getProductById,
+  uploadImgToS3,
+  deleteImage,
 }

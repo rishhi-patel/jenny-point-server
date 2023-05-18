@@ -8,9 +8,6 @@ const { createSuccessResponse } = require("../utils/utils")
 // @route   GET /api/Category
 // @access  Private
 const getCategories = asyncHandler(async (req, res) => {
-  const pageSize = 10
-  const page = Number(req.query.pageNumber) || 1
-
   const keyword = req.query.keyword
     ? {
         name: {
@@ -20,7 +17,6 @@ const getCategories = asyncHandler(async (req, res) => {
       }
     : {}
 
-  const count = await Category.countDocuments({})
   const data = await Category.find({ ...keyword }).sort({
     createdAt: -1,
   })
