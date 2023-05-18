@@ -8,7 +8,15 @@ const awsService = require("../utils/aws.js")
 // @route   GET /api/products
 // @access  Private/Admin
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).sort({ createdAt: -1 })
+  const keyword = req.query.keyword
+    ? {
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
+      }
+    : {}
+  const products = await Product.find({ ...keyword }).sort({ createdAt: -1 })
 
   if (products) {
     createSuccessResponse(res, products, 200)
