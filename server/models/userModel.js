@@ -22,7 +22,21 @@ const userSchema = mongoose.Schema(
       type: Number,
       default: null,
     },
-    address: { type: String },
+    address: { type: String, default: "" },
+    cart: {
+      products: [
+        {
+          id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+          },
+          qty: {
+            type: Number,
+            default: null,
+          },
+        },
+      ],
+    },
   },
   {
     timestamps: true,

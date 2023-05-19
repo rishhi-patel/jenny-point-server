@@ -9,6 +9,9 @@ const {
   deleteUserAccount,
   blockUnBlockCustomer,
   verifyAdmin,
+  addProductToCart,
+  removeProductFromCart,
+  getUserCartDetails,
 } = require("../controllers/userController")
 
 const { protect, admin } = require("../middleware/authMiddleware")
@@ -29,9 +32,17 @@ module.exports = (router) => {
     .route("/user")
     .get(protect, getCustomers)
     .delete(protect, deleteUserAccount)
+  // cart section
+  router.route("/user/cart").get(protect, getUserCartDetails)
+  router
+    .route("/user/cart/:id")
+    .post(protect, addProductToCart)
+    .delete(protect, removeProductFromCart)
+
   router.route("/user/:_id").get(protect, getCustomerById)
   // admin routes
   router.route("/customer/:_id").put(protect, admin, updateCustomerDetails)
+
   router
     .route("/customer/:_id/block")
     .patch(protect, admin, blockUnBlockCustomer)

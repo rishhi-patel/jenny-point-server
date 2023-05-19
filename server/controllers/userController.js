@@ -1,8 +1,8 @@
 const asyncHandler = require("express-async-handler")
-const bcrypt = require("bcryptjs")
-const { createSuccessResponse } = require("../utils/utils")
+const { createSuccessResponse, getCartDetails } = require("../utils/utils")
 const generateToken = require("../utils/generateToken")
 const User = require("../models/userModel")
+const { default: mongoose } = require("mongoose")
 
 // @desc   auth user
 // @route   POST /api/user/admin/register
@@ -142,7 +142,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       { ...req.body },
       { new: true }
     )
-    console.log({ updatedUser })
+
     createSuccessResponse(res, updatedUser, 200, "User Details Updated")
   } else {
     res.status(400)
@@ -253,6 +253,55 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  delete account
+// @route   DELETE /api/user
+// @access  private
+const getUserCartDetails = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  const cart = await getCartDetails(_id)
+  createSuccessResponse(res, cart, 200, "Product Added To Cart")
+})
+
+// @desc add to cart
+// @route   POST /api/user/cart/:id
+// @access  privatex
+const addProductToCart = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  const { id } = req.params
+  const { qty } = req.body
+
+  const alreadyInCart = await User.findOne({ _id, "cart.products.id": id })
+  if (alreadyInCart) {
+    await User.findOneAndUpdate(
+      { _id, "cart.products.id": id },
+      { $set: { "cart.products.$": { id, qty } } },
+      { upsert: true, new: true }
+    )
+  } else {
+    await User.findOneAndUpdate(
+      { _id },
+      { $push: { "cart.products": { id, qty } } }
+    )
+  }
+  const cart = await getCartDetails(_id)
+  createSuccessResponse(res, cart, 200, "Product Added To Cart")
+})
+
+// @desc add to cart
+// @route   POST /api/user/cart/:id
+// @access  privatex
+const removeProductFromCart = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  const { id } = req.params
+
+  await User.findOneAndUpdate(
+    { _id, "cart.products.id": id },
+    { $pull: { "cart.products": { id } } },
+    { new: true }
+  )
+  const cart = await getCartDetails(_id)
+  createSuccessResponse(res, cart, 200, "Product Removed From Cart")
+})
 module.exports = {
   registerAdmin,
   updateUserProfile,
@@ -265,4 +314,7 @@ module.exports = {
   blockUnBlockCustomer,
   deleteUserAccount,
   verifyAdmin,
+  addProductToCart,
+  removeProductFromCart,
+  getUserCartDetails,
 }
