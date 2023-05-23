@@ -124,12 +124,11 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getProductById = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const { cart } = req.user
 
   if (ObjectId.isValid(_id)) {
     const product = await Product.findOne({ _id }).lean()
-    if (cart) {
-      product.cart = cart.products.find(
+    if (req.user) {
+      product.cart = req.user.cart.products.find(
         (p) => p.id.toString() === _id.toString()
       )
         ? 1
