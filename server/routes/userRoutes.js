@@ -47,5 +47,5 @@ module.exports = (router) => {
     .route("/user/:_id")
     .get(protect, getUserById)
     .delete(protect, deleteUserAccount)
-    .put(protect, admin, updateUserDetails)
+    .put(protect, updateUserDetails)
 }

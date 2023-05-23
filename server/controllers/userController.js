@@ -105,6 +105,7 @@ const createUser = asyncHandler(async (req, res) => {
   const { userType, mobileNo } = req.body
   const existUser = await User.findOne({ mobileNo })
   if (!existUser) {
+    checkUserAccess(res, req.user.userType, userType)
     const newUser = await User.create({
       ...req.body,
     })

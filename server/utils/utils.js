@@ -114,7 +114,7 @@ const checkUserAccess = (res, userType, targetUserType) => {
         throw new Error("Not Authorized as Admin")
       }
       break
-    case "wareHousemanager":
+    case "wareHouseManager":
       if (!["admin", "distributor"].includes(userType)) {
         res.status(401)
         throw new Error("Not Authorized as distributor")
