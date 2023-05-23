@@ -8,15 +8,50 @@ const awsService = require("../utils/aws.js")
 // @route   GET /api/products
 // @access  Private/Admin
 const getProducts = asyncHandler(async (req, res) => {
-  const keyword = req.query.keyword
-    ? {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
+  const { brand, category, subCategory } = req.query
+  let products = []
+
+  let keyword = req.query.keyword
+    ? [
+        {
+          $match: {
+            name: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
         },
-      }
-    : {}
-  const products = await Product.find({ ...keyword }).sort({ createdAt: -1 })
+      ]
+    : [
+        { $match: { name: { $exists: true } } },
+        {
+          $addFields: {
+            price: {
+              $subtract: ["$price", "$discount"],
+            },
+          },
+        },
+      ]
+
+  // filter based on brand
+  if (brand) {
+    if (Array.isArray(brand))
+      keyword.push({ $match: { brand: { $in: brand } } })
+    else keyword.push({ $match: { brand: { $in: brand.split(";") } } })
+  }
+  if (category) {
+    if (Array.isArray(category))
+      keyword.push({ $match: { category: { $in: category } } })
+    else keyword.push({ $match: { category: { $in: category.split(";") } } })
+  }
+  if (subCategory) {
+    if (Array.isArray(subCategory))
+      keyword.push({ $match: { subCategory: { $in: subCategory } } })
+    else
+      keyword.push({ $match: { subCategory: { $in: subCategory.split(";") } } })
+  }
+
+  products = await Product.aggregate(keyword)
 
   if (products) {
     createSuccessResponse(res, products, 200)
@@ -89,9 +124,17 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getProductById = asyncHandler(async (req, res) => {
   const { _id } = req.params
+  const { cart } = req.user
 
   if (ObjectId.isValid(_id)) {
     const product = await Product.findOne({ _id }).lean()
+    if (cart) {
+      product.cart = cart.products.find(
+        (p) => p.id.toString() === _id.toString()
+      )
+        ? 1
+        : 0
+    } else product.cart = 0
     if (product) {
       createSuccessResponse(res, product, 200)
     } else {

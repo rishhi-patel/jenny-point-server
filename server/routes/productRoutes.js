@@ -11,7 +11,7 @@ const {
   uploadImgToS3,
   deleteImage,
 } = require("../controllers/productController.js")
-const { protect } = require("../middleware/authMiddleware.js")
+const { protect, productMiddlewre } = require("../middleware/authMiddleware.js")
 
 module.exports = (router) => {
   // public routes
@@ -20,7 +20,7 @@ module.exports = (router) => {
   router.route("/product").post(protect, createProduct).get(getProducts)
   router
     .route("/product/:_id")
-    .get(getProductById)
+    .get(productMiddlewre, getProductById)
     .put(protect, updateProduct)
     .delete(protect, deleteProduct)
   router
