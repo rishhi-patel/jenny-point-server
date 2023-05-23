@@ -5,6 +5,7 @@ require("./userRoutes")(router)
 require("./categoryRoutes")(router)
 require("./brandRoutes")(router)
 require("./productRoutes")(router)
+require("./orderRoutes")(router)
 
 module.exports = function (app) {
   app.get("/", (req, res) => res.send("API is running...."))

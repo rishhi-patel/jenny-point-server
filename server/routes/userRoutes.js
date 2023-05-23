@@ -18,20 +18,16 @@ const { protect, admin } = require("../middleware/authMiddleware")
 
 module.exports = (router) => {
   // public routes
-
   router.route("/user/login").post(sendOTP)
   router.route("/user/verify-otp").post(verifyOTP)
-  router.route("/user/verify-admin").post(verifyAdmin)
 
   // private Routes
   router
     .route("/user/profile")
     .get(protect, getUserDetails)
     .post(protect, updateUserProfile)
-  router
-    .route("/user")
-    .get(protect, getCustomers)
-    .delete(protect, deleteUserAccount)
+  router.route("/user").get(protect, getCustomers)
+
   // cart section
   router.route("/user/cart").get(protect, getUserCartDetails)
   router
@@ -39,9 +35,14 @@ module.exports = (router) => {
     .post(protect, addProductToCart)
     .delete(protect, removeProductFromCart)
 
-  router.route("/user/:_id").get(protect, getCustomerById)
   // admin routes
+  router.route("/admin/login").post(sendOTP)
   router.route("/customer/:_id").put(protect, admin, updateCustomerDetails)
+
+  router
+    .route("/user/:_id")
+    .get(protect, getCustomerById)
+    .delete(protect, deleteUserAccount)
 
   router
     .route("/customer/:_id/block")

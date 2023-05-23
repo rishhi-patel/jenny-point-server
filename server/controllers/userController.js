@@ -1,42 +1,12 @@
 const asyncHandler = require("express-async-handler")
-const { createSuccessResponse, getCartDetails } = require("../utils/utils")
+const {
+  createSuccessResponse,
+  getCartDetails,
+  checkUserAccess,
+} = require("../utils/utils")
 const generateToken = require("../utils/generateToken")
 const User = require("../models/userModel")
-const { default: mongoose } = require("mongoose")
 
-// @desc   auth user
-// @route   POST /api/user/admin/register
-// @access  Private
-const registerAdmin = asyncHandler(async (req, res) => {
-  const { mobileNo } = req.body
-
-  const user = await User.findOne({ mobileNo })
-  if (user) {
-    res.status(400)
-    throw new Error("mobileNo is already registered")
-  } else {
-    const newUser = await User.create({
-      mobileNo,
-      name: "Admin User",
-      isAdmin: true,
-    })
-
-    if (newUser) {
-      createSuccessResponse(
-        res,
-        {
-          token: generateToken(newUser._id),
-          user: newUser,
-        },
-        200,
-        "Login Success"
-      )
-    } else {
-      res.status(400)
-      throw new Error("Something went Wrong")
-    }
-  }
-})
 // @desc    Auth user & get OTP
 // @route   POST /api/user/admin/generate-otp
 // @access  Public
@@ -47,7 +17,6 @@ const sendOTP = asyncHandler(async (req, res) => {
   existUser = await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
 
   if (!existUser) {
-    // create new user if not found
     existUser = await User.create({
       mobileNo,
       otp,
@@ -79,33 +48,6 @@ const verifyOTP = asyncHandler(async (req, res) => {
       200,
       "OTP verified  "
     )
-  } else {
-    res.status(400)
-    throw new Error("Invalid OTP")
-  }
-})
-// @desc    verify Admin
-// @route   POST /api/user/admin/verify-otp
-// @access  Public
-const verifyAdmin = asyncHandler(async (req, res) => {
-  const { mobileNo, otp } = req.body
-  const existUser = await User.findOne({ mobileNo }).select(["-password"])
-  if (existUser && existUser.otp === otp) {
-    if (existUser.isAdmin) {
-      existUser.otp = null
-      await existUser.save()
-      createSuccessResponse(
-        res,
-        {
-          token: generateToken(existUser._id),
-        },
-        200,
-        "OTP verified"
-      )
-    } else {
-      res.status(400)
-      throw new Error("Not Authorized as admin")
-    }
   } else {
     res.status(400)
     throw new Error("Invalid OTP")
@@ -154,6 +96,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   GET /api/user/
 // @access  Private
 const getCustomers = asyncHandler(async (req, res) => {
+  const { userType } = req.query
   const keyword = req.query.keyword
     ? {
         name: {
@@ -162,16 +105,21 @@ const getCustomers = asyncHandler(async (req, res) => {
         },
       }
     : {}
-  const customers = await User.find({ ...keyword, isAdmin: false })
-    .select("-otp")
-    .sort({
-      createdAt: -1,
-    })
-  if (customers) {
-    createSuccessResponse(res, customers, 200)
+  if (userType) {
+    const customers = await User.find({ ...keyword, userType })
+      .select("-otp")
+      .sort({
+        createdAt: -1,
+      })
+    if (customers) {
+      createSuccessResponse(res, customers, 200)
+    } else {
+      res.status(400)
+      throw new Error("customers Not Found")
+    }
   } else {
     res.status(400)
-    throw new Error("customers Not Found")
+    throw new Error("Please Mention User Type")
   }
 })
 
@@ -193,10 +141,12 @@ const getCustomerById = asyncHandler(async (req, res) => {
 // @route   UPDATE /api/customer/:_ic
 // @access  public
 const updateCustomerDetails = asyncHandler(async (req, res) => {
+  const { userType } = req.user
   const { _id } = req.params
   const existUser = await User.findOne({ _id }).select("-otp")
 
   if (existUser) {
+    checkUserAccess(res, userType, existUser.userType)
     const updatedUser = await User.findOneAndUpdate(
       {
         _id,
@@ -217,9 +167,11 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
 const blockUnBlockCustomer = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { isBlocked } = req.body
+  const { userType } = req.user
   const existUser = await User.findOne({ _id })
 
   if (existUser) {
+    checkUserAccess(res, userType, existUser.userType)
     const updatedUser = await User.findOneAndUpdate(
       {
         _id,
@@ -240,11 +192,12 @@ const blockUnBlockCustomer = asyncHandler(async (req, res) => {
 // @route   DELETE /api/user
 // @access  private
 const deleteUserAccount = asyncHandler(async (req, res) => {
-  const { _id } = req.user
+  const { _id } = req.params
+  const { userType } = req.user
   const existUser = await User.findOne({ _id }).lean()
 
   if (existUser) {
-    // move user to discarded
+    checkUserAccess(res, userType, existUser.userType)
     await User.findOneAndDelete({ _id })
     createSuccessResponse(res, null, 200, "Account Deleted")
   } else {
@@ -303,18 +256,16 @@ const removeProductFromCart = asyncHandler(async (req, res) => {
   createSuccessResponse(res, cart, 200, "Product Removed From Cart")
 })
 module.exports = {
-  registerAdmin,
   updateUserProfile,
   getUserDetails,
-  getCustomers,
   getCustomerById,
   sendOTP,
   verifyOTP,
   updateCustomerDetails,
   blockUnBlockCustomer,
   deleteUserAccount,
-  verifyAdmin,
   addProductToCart,
   removeProductFromCart,
   getUserCartDetails,
+  getCustomers,
 }

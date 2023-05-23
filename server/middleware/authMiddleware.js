@@ -5,7 +5,6 @@ const { createErrorResponse } = require("../utils/utils.js")
 
 const protect = asyncHandler(async (req, res, next) => {
   let token
-
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
@@ -39,7 +38,7 @@ const protect = asyncHandler(async (req, res, next) => {
 })
 
 const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+  if (req.user && req.user.userType === "admin") {
     next()
   } else {
     res.status(401)
@@ -47,4 +46,24 @@ const admin = (req, res, next) => {
   }
 }
 
-module.exports = { protect, admin }
+const distribiutor = (req, res, next) => {
+  if (req.user && ["distributor", "admin"].includes(req.user.userType)) {
+    next()
+  } else {
+    res.status(401)
+    throw new Error("Not authorized as distributor")
+  }
+}
+
+const deliveryPerson = (req, res, next) => {
+  if (
+    req.user &&
+    ["deliveryPerson", "distributor", "admin"].includes(req.user.userType)
+  ) {
+    next()
+  } else {
+    res.status(401)
+    throw new Error("Not authorized as Delivery Person")
+  }
+}
+module.exports = { protect, admin, distribiutor, deliveryPerson }

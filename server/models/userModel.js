@@ -9,9 +9,16 @@ const userSchema = mongoose.Schema(
     email: {
       type: String,
     },
-    isAdmin: {
-      type: Boolean,
-      default: false,
+    userType: {
+      type: String,
+      enum: [
+        "admin",
+        "customer",
+        "distributor",
+        "deliveryPerson",
+        "wareHouseManager",
+      ],
+      default: "customer",
     },
     isBlocked: {
       type: Boolean,

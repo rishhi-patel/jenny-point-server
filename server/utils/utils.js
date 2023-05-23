@@ -100,5 +100,39 @@ const getCartDetails = async (_id) => {
   ])
   return cart[0]
 }
-
-module.exports = { createSuccessResponse, createErrorResponse, getCartDetails }
+const checkUserAccess = (res, userType, targetUserType) => {
+  switch (targetUserType) {
+    case "customer":
+      if (!["admin"].includes(userType)) {
+        res.status(401)
+        throw new Error("Not Authorized as Admin")
+      }
+      break
+    case "distributor":
+      if (!["admin"].includes(userType)) {
+        res.status(401)
+        throw new Error("Not Authorized as Admin")
+      }
+      break
+    case "wareHousemanager":
+      if (!["admin", "distributor"].includes(userType)) {
+        res.status(401)
+        throw new Error("Not Authorized as distributor")
+      }
+      break
+    case "deliveryPerson":
+      if (!["admin", "distributor"].includes(userType)) {
+        res.status(401)
+        throw new Error("Not Authorized distributor")
+      }
+      break
+    default:
+      break
+  }
+}
+module.exports = {
+  createSuccessResponse,
+  createErrorResponse,
+  getCartDetails,
+  checkUserAccess,
+}

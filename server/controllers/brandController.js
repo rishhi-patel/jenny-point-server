@@ -1,15 +1,12 @@
 const asyncHandler = require("express-async-handler")
 const Brand = require("../models/brandModal")
 const awsService = require("../utils/aws")
-const sharp = require("sharp")
 const { createSuccessResponse } = require("../utils/utils")
 
 // @desc    Fetch all products
 // @route   GET /api/brand
 // @access  Private
 const getBrand = asyncHandler(async (req, res) => {
-  const pageSize = 10
-  const page = Number(req.query.pageNumber) || 1
   const keyword = req.query.keyword
     ? {
         name: {
