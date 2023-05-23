@@ -30,6 +30,50 @@ const sendOTP = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc    Auth user & get OTP
+// @route   POST /api/admin/login
+// @access  Public
+const adminLogin = asyncHandler(async (req, res) => {
+  const { mobileNo } = req.body
+  let existUser = null
+  const otp = 987654
+  existUser = await User.findOne({ mobileNo })
+  if (existUser && existUser.userType === "admin") {
+    await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
+    createSuccessResponse(res, otp, 200, "OTP sent")
+  } else {
+    res.status(400)
+    throw new Error("Not Authorized as Admin")
+  }
+})
+
+// @desc    Auth user & get OTP
+// @route   POST /api/teams/login
+// @access  Public
+const teamsLogin = asyncHandler(async (req, res) => {
+  const { mobileNo } = req.body
+  let existUser = null
+  const otp = 987654
+  existUser = await User.findOne({ mobileNo })
+  if (
+    existUser &&
+    ["distributor", "deliveryPerson", "wareHouseManager", "admin"].includes(
+      existUser.userType
+    )
+  ) {
+    if (!existUser.isBlocked) {
+      await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
+      createSuccessResponse(res, otp, 200, "OTP sent")
+    } else {
+      res.status(400)
+      throw new Error("User Blocked")
+    }
+  } else {
+    res.status(400)
+    throw new Error("User Not Authorized")
+  }
+})
+
 // @desc    verify OTP
 // @route   POST /api/user/admin/verify-otp
 // @access  Public
@@ -51,6 +95,23 @@ const verifyOTP = asyncHandler(async (req, res) => {
   } else {
     res.status(400)
     throw new Error("Invalid OTP")
+  }
+})
+
+// @desc    Auth user & get OTP
+// @route   POST /api/admin/login
+// @access  Public
+const createUser = asyncHandler(async (req, res) => {
+  const { userType, mobileNo } = req.body
+  const existUser = await User.findOne({ mobileNo })
+  if (!existUser) {
+    const newUser = await User.create({
+      ...req.body,
+    })
+    createSuccessResponse(res, newUser, 201, `${userType} Added`)
+  } else {
+    res.status(400)
+    throw new Error("Mobile Number Already In Use")
   }
 })
 
@@ -92,10 +153,10 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc   get customers
+// @desc   get users
 // @route   GET /api/user/
 // @access  Private
-const getCustomers = asyncHandler(async (req, res) => {
+const getUsers = asyncHandler(async (req, res) => {
   const { userType } = req.query
   const keyword = req.query.keyword
     ? {
@@ -106,16 +167,16 @@ const getCustomers = asyncHandler(async (req, res) => {
       }
     : {}
   if (userType) {
-    const customers = await User.find({ ...keyword, userType })
+    const users = await User.find({ ...keyword, userType })
       .select("-otp")
       .sort({
         createdAt: -1,
       })
-    if (customers) {
-      createSuccessResponse(res, customers, 200)
+    if (users) {
+      createSuccessResponse(res, users, 200)
     } else {
       res.status(400)
-      throw new Error("customers Not Found")
+      throw new Error("users Not Found")
     }
   } else {
     res.status(400)
@@ -123,24 +184,24 @@ const getCustomers = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc   get customers
+// @desc   get users
 // @route   GET /api/user/
 // @access  Private
-const getCustomerById = asyncHandler(async (req, res) => {
+const getUserById = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const customer = await User.findOne({ _id }).select("-otp")
-  if (customer) {
-    createSuccessResponse(res, customer, 200)
+  const user = await User.findOne({ _id }).select("-otp")
+  if (user) {
+    createSuccessResponse(res, user, 200)
   } else {
     res.status(400)
-    throw new Error("customers Not Found")
+    throw new Error("users Not Found")
   }
 })
 
-// @desc  update customer
-// @route   UPDATE /api/customer/:_ic
+// @desc  update user
+// @route   UPDATE /api/user/:_ic
 // @access  public
-const updateCustomerDetails = asyncHandler(async (req, res) => {
+const updateUserDetails = asyncHandler(async (req, res) => {
   const { userType } = req.user
   const { _id } = req.params
   const existUser = await User.findOne({ _id }).select("-otp")
@@ -154,17 +215,17 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
       { ...req.body },
       { new: true }
     )
-    createSuccessResponse(res, updatedUser, 200, "Customer Details Updated")
+    createSuccessResponse(res, updatedUser, 200, "User Details Updated")
   } else {
     res.status(400)
     throw new Error("User Not Found")
   }
 })
 
-// @desc  update customer
-// @route   PATCH /api/customer/:_ic
+// @desc  update user
+// @route   PATCH /api/user/:_ic
 // @access  public
-const blockUnBlockCustomer = asyncHandler(async (req, res) => {
+const blockUnBlockUser = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { isBlocked } = req.body
   const { userType } = req.user
@@ -179,12 +240,11 @@ const blockUnBlockCustomer = asyncHandler(async (req, res) => {
       { isBlocked },
       { new: true }
     )
-    if (isBlocked)
-      createSuccessResponse(res, updatedUser, 200, "Customer Blocked")
-    else createSuccessResponse(res, updatedUser, 200, "Customer Unblocked")
+    if (isBlocked) createSuccessResponse(res, updatedUser, 200, "User Blocked")
+    else createSuccessResponse(res, updatedUser, 200, "User Unblocked")
   } else {
     res.status(400)
-    throw new Error("Customer Not Found")
+    throw new Error("User Not Found")
   }
 })
 
@@ -258,14 +318,17 @@ const removeProductFromCart = asyncHandler(async (req, res) => {
 module.exports = {
   updateUserProfile,
   getUserDetails,
-  getCustomerById,
+  getUserById,
   sendOTP,
   verifyOTP,
-  updateCustomerDetails,
-  blockUnBlockCustomer,
+  updateUserDetails,
+  blockUnBlockUser,
   deleteUserAccount,
   addProductToCart,
   removeProductFromCart,
   getUserCartDetails,
-  getCustomers,
+  getUsers,
+  adminLogin,
+  teamsLogin,
+  createUser,
 }

@@ -1,17 +1,19 @@
 const {
   updateUserProfile,
   getUserDetails,
-  getCustomers,
-  getCustomerById,
+  getUsers,
+  getUserById,
   sendOTP,
   verifyOTP,
-  updateCustomerDetails,
+  updateUserDetails,
   deleteUserAccount,
-  blockUnBlockCustomer,
-  verifyAdmin,
+  blockUnBlockUser,
   addProductToCart,
   removeProductFromCart,
   getUserCartDetails,
+  adminLogin,
+  teamsLogin,
+  createUser,
 } = require("../controllers/userController")
 
 const { protect, admin } = require("../middleware/authMiddleware")
@@ -19,32 +21,31 @@ const { protect, admin } = require("../middleware/authMiddleware")
 module.exports = (router) => {
   // public routes
   router.route("/user/login").post(sendOTP)
+  router.route("/teams/login").post(teamsLogin)
+  router.route("/admin/login").post(adminLogin)
+
   router.route("/user/verify-otp").post(verifyOTP)
 
-  // private Routes
+  // Private routes
+  // Profile routes routes
   router
     .route("/user/profile")
     .get(protect, getUserDetails)
     .post(protect, updateUserProfile)
-  router.route("/user").get(protect, getCustomers)
 
-  // cart section
+  // cart routes
   router.route("/user/cart").get(protect, getUserCartDetails)
   router
     .route("/user/cart/:id")
     .post(protect, addProductToCart)
     .delete(protect, removeProductFromCart)
 
-  // admin routes
-  router.route("/admin/login").post(sendOTP)
-  router.route("/customer/:_id").put(protect, admin, updateCustomerDetails)
-
+  // common routes
+  router.route("/user").get(protect, getUsers).post(protect, createUser)
+  router.route("/user/:_id/block").patch(protect, admin, blockUnBlockUser)
   router
     .route("/user/:_id")
-    .get(protect, getCustomerById)
+    .get(protect, getUserById)
     .delete(protect, deleteUserAccount)
-
-  router
-    .route("/customer/:_id/block")
-    .patch(protect, admin, blockUnBlockCustomer)
+    .put(protect, admin, updateUserDetails)
 }
