@@ -57,17 +57,22 @@ const createOrder = asyncHandler(async (req, res) => {
     totalPrice,
     totalQty,
   } = await getCartDetails(_id)
+  if (address.trim()) {
+    const order = new Order({
+      orderItems: products,
+      totalPrice,
+      shippingAddress: address,
+      orderTrack: [{ status: "Order Placed" }],
+      totalQty,
+      user: _id,
+    })
 
-  const order = new Order({
-    orderItems: products,
-    totalPrice,
-    shippingAddress: address,
-    orderTrack: [{ status: "Order Placed" }],
-    totalQty,
-    user: _id,
-  })
-  const newOrder = await order.save()
-  createSuccessResponse(res, newOrder, 200)
+    const newOrder = await order.save()
+    createSuccessResponse(res, newOrder, 200)
+  } else {
+    res.status(400)
+    throw new Error("Please Add Valid Address")
+  }
 })
 
 // @desc    get order By ID
