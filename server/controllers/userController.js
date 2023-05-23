@@ -102,12 +102,14 @@ const verifyOTP = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/login
 // @access  Public
 const createUser = asyncHandler(async (req, res) => {
+  const { _id } = req.user
   const { userType, mobileNo } = req.body
   const existUser = await User.findOne({ mobileNo })
   if (!existUser) {
     checkUserAccess(res, req.user.userType, userType)
     const newUser = await User.create({
       ...req.body,
+      user: _id,
     })
     createSuccessResponse(res, newUser, 201, `${userType} Added`)
   } else {
@@ -159,7 +161,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @access  Private
 const getUsers = asyncHandler(async (req, res) => {
   const { userType } = req.query
-  const keyword = req.query.keyword
+  const { _id } = req.user
+  let keyword = req.query.keyword
     ? {
         name: {
           $regex: req.query.keyword,
@@ -167,6 +170,11 @@ const getUsers = asyncHandler(async (req, res) => {
         },
       }
     : {}
+
+  keyword = ["wareHouseManager", "deliveryPerson"].includes(userType)
+    ? { ...keyword, user: _id }
+    : { ...keyword }
+
   if (userType) {
     const users = await User.find({ ...keyword, userType })
       .select("-otp")
