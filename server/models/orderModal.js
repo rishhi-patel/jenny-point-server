@@ -34,6 +34,10 @@ const orderSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    wareHouseManager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     orderItems: [
       {
         name: { type: String, required: true },

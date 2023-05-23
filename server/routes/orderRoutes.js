@@ -13,18 +13,18 @@ const { protect, admin } = require("../middleware/authMiddleware")
 module.exports = (router) => {
   // Customer routes
   router
-    .route("/customer/order")
+    .route("/order")
     .get(protect, getCustomerOrders)
     .post(protect, createOrder)
-  router.route("/customer/order/:_id").get(protect, getOrderByID)
+  router.route("/order/:_id").get(protect, getOrderByID)
   // Distributor routes
   router
     .route("/distributor/order")
-    .get(protect, getAdminOrders)
+    .get(protect, getDistributorOrders)
     .patch(protect, assignOrder)
   // Admin routes
   router
     .route("/admin/order")
-    .get(protect, getDistributorOrders)
+    .get(protect, getAdminOrders)
     .patch(protect, assignOrder)
 }

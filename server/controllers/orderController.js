@@ -106,7 +106,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 // @access  Private
 const assignOrder = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const { key, value } = req.params
+  const { key, value } = req.body
   const updatedOrder = await Order.findOneAndUpdate(
     { _id },
     {

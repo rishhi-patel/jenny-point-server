@@ -91,7 +91,7 @@ const getProductById = asyncHandler(async (req, res) => {
   const { _id } = req.params
 
   if (ObjectId.isValid(_id)) {
-    const product = await Product.findOne({ _id })
+    const product = await Product.findOne({ _id }).lean()
     if (product) {
       createSuccessResponse(res, product, 200)
     } else {
