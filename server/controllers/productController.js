@@ -161,9 +161,8 @@ const getHomeScreenData = asyncHandler(async (req, res) => {
       }
     : {}
   if (brand) {
-    if (Array.isArray(brand))
-      keyword.push({ $match: { brand: { $in: brand } } })
-    else keyword.push({ $match: { brand: { $in: brand.split(";") } } })
+    if (Array.isArray(brand)) keyword = { ...keyword, brand: { $in: brand } }
+    else keyword = { ...keyword, brand: { $in: brand.split(";") } }
   }
   const brands = await Brand.find({}).select("name")
   const products = await Product.find({ ...keyword })
