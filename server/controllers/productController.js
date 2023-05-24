@@ -3,6 +3,7 @@ const Product = require("../models/productModal.js")
 const ObjectId = require("mongoose").Types.ObjectId
 const { createSuccessResponse } = require("../utils/utils.js")
 const awsService = require("../utils/aws.js")
+const Brand = require("../models/brandModal.js")
 
 // @desc  Get Products
 // @route   GET /api/products
@@ -149,6 +150,29 @@ const getProductById = asyncHandler(async (req, res) => {
 // @desc    upload product image
 // @route   POST /api/products/upload
 // @access  Private/Admin
+const getHomeScreenData = asyncHandler(async (req, res) => {
+  const { brand } = req.query
+  let keyword = req.query.keyword
+    ? {
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
+      }
+    : {}
+  if (brand) {
+    if (Array.isArray(brand))
+      keyword.push({ $match: { brand: { $in: brand } } })
+    else keyword.push({ $match: { brand: { $in: brand.split(";") } } })
+  }
+  const brands = await Brand.find({}).select("name")
+  const products = await Product.find({ ...keyword })
+  createSuccessResponse(res, { brands, products }, 200)
+})
+
+// @desc    upload product image
+// @route   POST /api/products/upload
+// @access  Private/Admin
 const uploadImgToS3 = asyncHandler(async (req, res) => {
   if (req.file) {
     const result = await awsService.uploadFile(req)
@@ -164,6 +188,9 @@ const uploadImgToS3 = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc    Delete product image
+// @route   PUT /api/products/upload
+// @access  Private/Admin
 const deleteImage = asyncHandler(async (req, res) => {
   const { key } = req.params
   if (key) {
@@ -174,6 +201,7 @@ const deleteImage = asyncHandler(async (req, res) => {
     throw new Error("Please Provide a key")
   }
 })
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -182,4 +210,5 @@ module.exports = {
   getProductById,
   uploadImgToS3,
   deleteImage,
+  getHomeScreenData,
 }

@@ -12,6 +12,7 @@ const statusSchema = mongoose.Schema(
         "Delivered ",
         "Cancelled",
       ],
+      default: "Order Placed",
     },
   },
   {

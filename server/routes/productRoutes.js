@@ -10,11 +10,13 @@ const {
   getProductById,
   uploadImgToS3,
   deleteImage,
+  getHomeScreenData,
 } = require("../controllers/productController.js")
 const { protect, productMiddlewre } = require("../middleware/authMiddleware.js")
 
 module.exports = (router) => {
   // public routes
+  router.route("/product/homeScreen").get(getHomeScreenData)
 
   // private Routes
   router.route("/product").post(protect, createProduct).get(getProducts)

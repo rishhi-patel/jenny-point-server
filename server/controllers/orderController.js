@@ -6,8 +6,8 @@ const Order = require("../models/orderModal")
 // @route   GET /api/order/admin
 // @access  Private
 const getAdminOrders = asyncHandler(async (req, res) => {
-  const { _id } = req.query
-  const keyword = _id ? { _id } : {}
+  const { status } = req.query
+  const keyword = status ? { "currentOrderStatus.status": status } : {}
   const data = await Order.find({ ...keyword }).sort({
     createdAt: -1,
   })
@@ -19,7 +19,11 @@ const getAdminOrders = asyncHandler(async (req, res) => {
 // @access  Private
 const getDistributorOrders = asyncHandler(async (req, res) => {
   const { _id } = req.user
-  const data = await Order.find({ distributor: _id }).sort({
+  const { status } = req.query
+  const keyword = status
+    ? { distributor: _id, "currentOrderStatus.status": status }
+    : { distributor: _id }
+  const data = await Order.find({ ...keyword }).sort({
     createdAt: -1,
   })
   createSuccessResponse(res, data, 200)
@@ -30,7 +34,11 @@ const getDistributorOrders = asyncHandler(async (req, res) => {
 // @access  Private
 const getDeliveryPersonOrders = asyncHandler(async (req, res) => {
   const { _id } = req.user
-  const data = await Order.find({ deliveryPerson: _id }).sort({
+  const { status } = req.query
+  const keyword = status
+    ? { deliveryPerson: _id, "currentOrderStatus.status": status }
+    : { deliveryPerson: _id }
+  const data = await Order.find({ ...keyword }).sort({
     createdAt: -1,
   })
   createSuccessResponse(res, data, 200)
@@ -41,7 +49,29 @@ const getDeliveryPersonOrders = asyncHandler(async (req, res) => {
 // @access  Private
 const getCustomerOrders = asyncHandler(async (req, res) => {
   const { _id } = req.user
-  const data = await Order.find({ user: _id }).sort({
+  const { status } = req.query
+
+  const keyword = status
+    ? { user: _id, "currentOrderStatus.status": status }
+    : { user: _id }
+
+  console.log({ keyword })
+  const data = await Order.find({ ...keyword }).sort({
+    createdAt: -1,
+  })
+  createSuccessResponse(res, data, 200)
+})
+
+// @desc    Fetch distributer orders
+// @route   GET /api/order/distributor
+// @access  Private
+const getWareHouseOrders = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  const { status } = req.query
+  const keyword = status
+    ? { wareHouseManager: _id, "currentOrderStatus.status": status }
+    : { wareHouseManager: _id }
+  const data = await Order.find({ ...keyword }).sort({
     createdAt: -1,
   })
   createSuccessResponse(res, data, 200)
@@ -63,6 +93,7 @@ const createOrder = asyncHandler(async (req, res) => {
       totalPrice,
       shippingAddress: address,
       orderTrack: [{ status: "Order Placed" }],
+      currentOrderStatus: { status: "Order Placed" },
       totalQty,
       user: _id,
     })
@@ -93,13 +124,16 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const updatedOrder = await Order.findOneAndUpdate(
     { _id },
-    {
-      $push: {
-        orderTrack: {
-          status,
+    [
+      {
+        $push: {
+          orderTrack: {
+            status,
+          },
         },
       },
-    },
+      { currentOrderStatus: { status } },
+    ],
     {
       new: true,
     }
@@ -125,13 +159,16 @@ const assignOrder = asyncHandler(async (req, res) => {
     case "wareHouseManager": {
       await Order.findOneAndUpdate(
         { _id },
-        {
-          $push: {
-            orderTrack: {
-              status: "In Packaging",
+        [
+          {
+            $push: {
+              orderTrack: {
+                status: "In Packaging",
+              },
             },
           },
-        },
+          { currentOrderStatus: { status: "In Packaging" } },
+        ],
         {
           new: true,
         }
@@ -140,13 +177,16 @@ const assignOrder = asyncHandler(async (req, res) => {
     case "distributor": {
       await Order.findOneAndUpdate(
         { _id },
-        {
-          $push: {
-            orderTrack: {
-              status: "In Process",
+        [
+          {
+            $push: {
+              orderTrack: {
+                status: "In Process",
+              },
             },
           },
-        },
+          { currentOrderStatus: { status: "In Process" } },
+        ],
         {
           new: true,
         }
@@ -156,13 +196,16 @@ const assignOrder = asyncHandler(async (req, res) => {
       {
         await Order.findOneAndUpdate(
           { _id },
-          {
-            $push: {
-              orderTrack: {
-                status: "Out for Delivery",
+          [
+            {
+              $push: {
+                orderTrack: {
+                  status: "Out for Delivery",
+                },
               },
             },
-          },
+            { currentOrderStatus: { status: "Out for Delivery" } },
+          ],
           {
             new: true,
           }
@@ -186,4 +229,5 @@ module.exports = {
   getCustomerOrders,
   updateOrderStatus,
   assignOrder,
+  getWareHouseOrders,
 }

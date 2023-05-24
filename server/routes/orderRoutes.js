@@ -7,6 +7,7 @@ const {
   getCustomerOrders,
   updateOrderStatus,
   assignOrder,
+  getWareHouseOrders,
 } = require("../controllers/orderController")
 const { protect, admin } = require("../middleware/authMiddleware")
 
@@ -21,6 +22,16 @@ module.exports = (router) => {
   router
     .route("/distributor/order")
     .get(protect, getDistributorOrders)
+    .patch(protect, assignOrder)
+  // warehouse
+  router
+    .route("/wareHouse/order")
+    .get(protect, getWareHouseOrders)
+    .patch(protect, assignOrder)
+  // deliveryPerson
+  router
+    .route("/delivery/order")
+    .get(protect, getWareHouseOrders)
     .patch(protect, assignOrder)
   // Admin routes
   router
