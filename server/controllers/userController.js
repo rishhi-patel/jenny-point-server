@@ -264,11 +264,13 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { userType } = req.user
   const existUser = await User.findOne({ _id }).lean()
+  const targetUser = existUser.userType
 
   if (existUser) {
-    checkUserAccess(res, userType, existUser.userType)
+    checkUserAccess(res, userType, targetUser)
     await User.findOneAndDelete({ _id })
-    createSuccessResponse(res, null, 200, "Account Deleted")
+    const updated = await User.find({ userType: targetUser })
+    createSuccessResponse(res, updated, 200, "Account Deleted")
   } else {
     res.status(400)
     throw new Error("User Not Found")
