@@ -25,6 +25,7 @@ const userSchema = mongoose.Schema(
       default: false,
     },
     mobileNo: { type: Number, required: true },
+    gstNo: { type: String },
     otp: {
       type: Number,
       default: null,
