@@ -8,6 +8,7 @@ const {
   updateOrderStatus,
   assignOrder,
   getWareHouseOrders,
+  getAdminDistributors,
 } = require("../controllers/orderController")
 const { protect, admin } = require("../middleware/authMiddleware")
 
@@ -17,7 +18,10 @@ module.exports = (router) => {
     .route("/order")
     .get(protect, getCustomerOrders)
     .post(protect, createOrder)
-  router.route("/order/:_id").get(protect, getOrderByID)
+  router
+    .route("/order/:_id")
+    .get(protect, getOrderByID)
+    .patch(protect, assignOrder)
   // Distributor routes
   router
     .route("/distributor/order")
@@ -38,4 +42,5 @@ module.exports = (router) => {
     .route("/admin/order")
     .get(protect, getAdminOrders)
     .patch(protect, assignOrder)
+  router.route("/admin/distributors").get(protect, getAdminDistributors)
 }

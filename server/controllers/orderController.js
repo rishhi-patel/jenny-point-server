@@ -1,6 +1,9 @@
 const asyncHandler = require("express-async-handler")
 const { createSuccessResponse, getCartDetails } = require("../utils/utils")
 const Order = require("../models/orderModal")
+const mongoose = require("mongoose")
+const User = require("../models/userModel")
+const ObjectId = mongoose.Types.ObjectId
 
 // @desc    Fetch all orders
 // @route   GET /api/order/admin
@@ -111,7 +114,59 @@ const createOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrderByID = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const data = await Order.find({ _id })
+  const data = await Order.aggregate([
+    { $match: { _id: ObjectId(_id) } },
+    {
+      $lookup: {
+        from: "users",
+        let: { userId: "$user" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userId"] },
+            },
+          },
+          {
+            $addFields: {
+              mobileNo: { $toString: "$mobileNo" },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+              email: 1,
+              mobileNo: 1,
+            },
+          },
+        ],
+        as: "user",
+      },
+    },
+    {
+      $unwind: "$user",
+    },
+  ])
+  // const data = await Order.findOne({ _id })
+  createSuccessResponse(res, data[0], 200)
+})
+
+// @desc    get order By ID
+// @route   GET /api/order/:_id
+// @access  Private
+const getAdminDistributors = asyncHandler(async (req, res) => {
+  const data = await User.aggregate([
+    { $match: { userType: "distributor" } },
+    {
+      $project: {
+        _id: 0,
+        label: {
+          $concat: ["$name", "[", "$address", "]"],
+        },
+        value: { $toString: "$_id" },
+      },
+    },
+  ])
   createSuccessResponse(res, data, 200)
 })
 
@@ -230,4 +285,5 @@ module.exports = {
   updateOrderStatus,
   assignOrder,
   getWareHouseOrders,
+  getAdminDistributors,
 }
