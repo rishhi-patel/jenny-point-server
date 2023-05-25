@@ -11,9 +11,11 @@ const ObjectId = mongoose.Types.ObjectId
 const getAdminOrders = asyncHandler(async (req, res) => {
   const { status } = req.query
   const keyword = status ? { "currentOrderStatus.status": status } : {}
-  const data = await Order.find({ ...keyword }).sort({
-    createdAt: -1,
-  })
+  const data = await Order.find({ ...keyword })
+    .populate("distributor", ["name"])
+    .sort({
+      createdAt: -1,
+    })
   createSuccessResponse(res, data, 200)
 })
 
