@@ -126,6 +126,7 @@ const getOrderByID = asyncHandler(async (req, res) => {
               $expr: { $eq: ["$_id", "$$userId"] },
             },
           },
+
           {
             $project: {
               _id: 0,
@@ -196,6 +197,71 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 const assignOrder = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { key, value } = req.body
+  const existOrder = await Order.findOne({ _id })
+
+  if (existOrder && !existOrder[key]) {
+    switch (key) {
+      case "wareHouseManager":
+        {
+          await Order.findOneAndUpdate(
+            { _id },
+            {
+              $push: {
+                orderTrack: {
+                  status: "In Packaging",
+                },
+              },
+              currentOrderStatus: { status: "In Packaging" },
+            },
+            {
+              new: true,
+            }
+          )
+        }
+        break
+      case "distributor":
+        {
+          await Order.findOneAndUpdate(
+            { _id },
+            {
+              $push: {
+                orderTrack: {
+                  status: "In Process",
+                },
+              },
+              currentOrderStatus: { status: "In Process" },
+            },
+            {
+              new: true,
+            }
+          )
+        }
+        break
+      case "deliveryPerson":
+        {
+          await Order.findOneAndUpdate(
+            { _id },
+            {
+              $push: {
+                orderTrack: {
+                  status: "Out for Delivery",
+                },
+              },
+              currentOrderStatus: { status: "Out for Delivery" },
+            },
+            {
+              new: true,
+            }
+          )
+        }
+
+        break
+
+      default:
+        break
+    }
+  }
+
   const updatedOrder = await Order.findOneAndUpdate(
     { _id },
     {
@@ -205,69 +271,7 @@ const assignOrder = asyncHandler(async (req, res) => {
       new: true,
     }
   )
-  switch (key) {
-    case "wareHouseManager": {
-      await Order.findOneAndUpdate(
-        { _id },
-        [
-          {
-            $push: {
-              orderTrack: {
-                status: "In Packaging",
-              },
-            },
-          },
-          { currentOrderStatus: { status: "In Packaging" } },
-        ],
-        {
-          new: true,
-        }
-      )
-    }
-    case "distributor": {
-      await Order.findOneAndUpdate(
-        { _id },
-        [
-          {
-            $push: {
-              orderTrack: {
-                status: "In Process",
-              },
-            },
-          },
-          { currentOrderStatus: { status: "In Process" } },
-        ],
-        {
-          new: true,
-        }
-      )
-    }
-    case "deliveryPerson":
-      {
-        await Order.findOneAndUpdate(
-          { _id },
-          [
-            {
-              $push: {
-                orderTrack: {
-                  status: "Out for Delivery",
-                },
-              },
-            },
-            { currentOrderStatus: { status: "Out for Delivery" } },
-          ],
-          {
-            new: true,
-          }
-        )
-      }
-
-      break
-
-    default:
-      break
-  }
-  createSuccessResponse(res, updatedOrder, 200)
+  createSuccessResponse(res, updatedOrder, 200, `Order Assigned`)
 })
 
 module.exports = {
