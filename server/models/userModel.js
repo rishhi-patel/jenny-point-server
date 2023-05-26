@@ -9,6 +9,9 @@ const userSchema = mongoose.Schema(
     email: {
       type: String,
     },
+    wareHouseName: {
+      type: String,
+    },
     userType: {
       type: String,
       enum: [
