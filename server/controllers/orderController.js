@@ -165,7 +165,36 @@ const getAdminDistributors = asyncHandler(async (req, res) => {
       },
     },
   ])
+
   createSuccessResponse(res, data, 200)
+})
+
+// @desc    get order By ID
+// @route   GET /api/order/:_id
+// @access  Private
+const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  const wareHouseManagerList = await User.aggregate([
+    { $match: { user: _id, userType: "wareHouseManager" } },
+    {
+      $project: {
+        _id: 0,
+        label: "$name",
+        value: { $toString: "$_id" },
+      },
+    },
+  ])
+  const deliveryPersonList = await User.aggregate([
+    { $match: { user: _id, userType: "deliveryPerson" } },
+    {
+      $project: {
+        _id: 0,
+        label: "$name",
+        value: { $toString: "$_id" },
+      },
+    },
+  ])
+  createSuccessResponse(res, { wareHouseManagerList, deliveryPersonList }, 200)
 })
 
 // @desc    updateOrderStatus
@@ -287,4 +316,5 @@ module.exports = {
   assignOrder,
   getWareHouseOrders,
   getAdminDistributors,
+  getWarhouseAndDeliveryPerson,
 }
