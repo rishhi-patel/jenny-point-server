@@ -42,7 +42,7 @@ module.exports = (router) => {
 
   // common routes
   router.route("/user").get(protect, getUsers).post(protect, createUser)
-  router.route("/user/:_id/block").patch(protect, admin, blockUnBlockUser)
+  router.route("/user/:_id/block").patch(protect, blockUnBlockUser)
   router
     .route("/user/:_id")
     .get(protect, getUserById)
