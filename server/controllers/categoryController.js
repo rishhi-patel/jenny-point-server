@@ -45,7 +45,7 @@ const createCategory = asyncHandler(async (req, res) => {
           image: result,
         })
         const createdCategory = await newCategory.save()
-        createSuccessResponse(res, createdCategory, 201, "Category Created")
+        createSuccessResponse(res, createdCategory, 200, "Category Created")
       } else {
         res.status(400)
         throw new Error(`Image is required`)
@@ -140,7 +140,7 @@ const createSubCategory = asyncHandler(async (req, res) => {
         new: true,
       }
     )
-    createSuccessResponse(res, createdSubCategory, 201, "Category Created")
+    createSuccessResponse(res, createdSubCategory, 200, "Category Created")
   } else {
     res.status(400)
     throw new Error(`Main Category Not Exist`)

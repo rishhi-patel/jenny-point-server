@@ -112,7 +112,7 @@ const createUser = asyncHandler(async (req, res) => {
       ...req.body,
       user: _id,
     })
-    createSuccessResponse(res, newUser, 201, `${userType} Added`)
+    createSuccessResponse(res, newUser, 200, `${userType} Added`)
   } else {
     res.status(400)
     throw new Error("Mobile Number Already In Use")

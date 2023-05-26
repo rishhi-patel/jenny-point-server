@@ -71,7 +71,7 @@ const createProduct = asyncHandler(async (req, res) => {
   const newProduct = new Product({ ...req.body, createdBy: _id })
   const createdprodut = await newProduct.save()
   if (createdprodut) {
-    createSuccessResponse(res, createdprodut, 201, "Product Created")
+    createSuccessResponse(res, createdprodut, 200, "Product Created")
   } else {
     res.status(400)
     throw new Error("something went wrong")

@@ -40,7 +40,7 @@ const createBrand = asyncHandler(async (req, res) => {
         image: result,
       })
       const createdbrand = await brand.save()
-      createSuccessResponse(res, createdbrand, 201, "Brand Created")
+      createSuccessResponse(res, createdbrand, 200, "Brand Created")
     } else {
       res.status(400)
       throw new Error(`Image is required`)
