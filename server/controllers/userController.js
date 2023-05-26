@@ -87,6 +87,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     createSuccessResponse(
       res,
       {
+        type: existUser.userType,
         token: generateToken(existUser._id),
       },
       200,
