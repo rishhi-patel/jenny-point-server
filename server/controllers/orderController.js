@@ -130,42 +130,137 @@ const createOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrderByID = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  // const data = await Order.aggregate([
-  //   { $match: { _id: ObjectId(_id) } },
-  //   {
-  //     $lookup: {
-  //       from: "users",
-  //       let: { userId: "$user" },
-  //       pipeline: [
-  //         {
-  //           $match: {
-  //             $expr: { $eq: ["$_id", "$$userId"] },
-  //           },
-  //         },
+  const data = await Order.aggregate([
+    { $match: { _id: ObjectId(_id) } },
+    {
+      $lookup: {
+        from: "users",
+        let: { userId: "$user" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+              email: 1,
+              mobileNo: 1,
+            },
+          },
+        ],
+        as: "user",
+      },
+    },
+    {
+      $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        let: { distributorId: "$distributor" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$distributorId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+            },
+          },
+        ],
+        as: "distributor",
+      },
+    },
+    {
+      $unwind: {
+        path: "$distributor",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        distributor: {
+          $ifNull: ["$distributor", {}],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        let: { wareHouseManagerId: "$wareHouseManager" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$wareHouseManagerId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+            },
+          },
+        ],
+        as: "wareHouseManager",
+      },
+    },
+    {
+      $unwind: {
+        path: "$wareHouseManager",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        wareHouseManager: {
+          $ifNull: ["$wareHouseManager", {}],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        let: { deliveryPersonId: "$deliveryPerson" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$deliveryPersonId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+            },
+          },
+        ],
+        as: "deliveryPerson",
+      },
+    },
+    {
+      $unwind: {
+        path: "$deliveryPerson",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        deliveryPerson: {
+          $ifNull: ["$deliveryPerson", {}],
+        },
+      },
+    },
+  ])
 
-  //         {
-  //           $project: {
-  //             _id: 0,
-  //             name: 1,
-  //             email: 1,
-  //             mobileNo: 1,
-  //           },
-  //         },
-  //       ],
-  //       as: "user",
-  //     },
-  //   },
-  //   {
-  //     $unwind: "$user",
-  //   },
-  // ])
-  // const data = await Order.findOne({ _id })
-
-  const data = await Order.findOne({ _id })
-    .populate("distributor", ["name"])
-    .populate("user", ["name", "email", "mobileNo"])
-    .populate("deliveryPerson", ["name"])
-    .populate("wareHouseManager", ["name"])
   createSuccessResponse(res, data, 200)
 })
 
@@ -323,6 +418,39 @@ const assignOrder = asyncHandler(async (req, res) => {
   createSuccessResponse(res, updatedOrder, 200, `Order Assigned`)
 })
 
+// @desc    markAsdelivered
+// @route   PATCH /api/order/:_id
+// @access  Private
+const markAsdelivered = asyncHandler(async (req, res) => {
+  const { _id } = req.params
+  const { status } = req.body
+
+  const existOrder = await Order.findOne({ _id })
+
+  const existUser = await User.findOne({ _id: existOrder.user }).select([
+    "-password",
+  ])
+
+  if (existUser && existUser.otp === otp) {
+    existUser.otp = null
+    await existUser.save()
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id },
+      {
+        $push: {
+          orderTrack: {
+            status: "Delivered",
+          },
+        },
+        currentOrderStatus: { status: "Delivered" },
+      },
+      {
+        new: true,
+      }
+    )
+    createSuccessResponse(res, updatedOrder, 200)
+  }
+})
 module.exports = {
   getAdminOrders,
   getDistributorOrders,
