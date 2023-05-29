@@ -23,6 +23,7 @@ module.exports = (router) => {
     .route("/order/:_id")
     .get(protect, getOrderByID)
     .patch(protect, assignOrder)
+    .put(protect, updateOrderStatus)
   // Distributor routes
   router
     .route("/distributor/order")

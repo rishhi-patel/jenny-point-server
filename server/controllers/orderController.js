@@ -222,20 +222,18 @@ const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
 // @access  Private
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const { status } = req.params
+  const { status } = req.body
 
   const updatedOrder = await Order.findOneAndUpdate(
     { _id },
-    [
-      {
-        $push: {
-          orderTrack: {
-            status,
-          },
+    {
+      $push: {
+        orderTrack: {
+          status,
         },
       },
-      { currentOrderStatus: { status } },
-    ],
+      currentOrderStatus: { status },
+    },
     {
       new: true,
     }
@@ -288,25 +286,25 @@ const assignOrder = asyncHandler(async (req, res) => {
           )
         }
         break
-      case "deliveryPerson":
-        {
-          await Order.findOneAndUpdate(
-            { _id },
-            {
-              $push: {
-                orderTrack: {
-                  status: "Out for Delivery",
-                },
-              },
-              currentOrderStatus: { status: "Out for Delivery" },
-            },
-            {
-              new: true,
-            }
-          )
-        }
+      // case "deliveryPerson":
+      //   {
+      //     await Order.findOneAndUpdate(
+      //       { _id },
+      //       {
+      //         $push: {
+      //           orderTrack: {
+      //             status: "Out for Delivery",
+      //           },
+      //         },
+      //         currentOrderStatus: { status: "Out for Delivery" },
+      //       },
+      //       {
+      //         new: true,
+      //       }
+      //     )
+      //   }
 
-        break
+      //   break
 
       default:
         break
