@@ -93,18 +93,32 @@ const createOrder = asyncHandler(async (req, res) => {
     totalQty,
   } = await getCartDetails(_id)
   if (address.trim()) {
-    const order = new Order({
-      orderItems: products,
-      totalPrice,
-      shippingAddress: address,
-      orderTrack: [{ status: "Order Placed" }],
-      currentOrderStatus: { status: "Order Placed" },
-      totalQty,
-      user: _id,
-    })
-
-    const newOrder = await order.save()
-    createSuccessResponse(res, newOrder, 200)
+    if (products.length) {
+      const order = new Order({
+        orderItems: products,
+        totalPrice,
+        shippingAddress: address,
+        orderTrack: [{ status: "Order Placed" }],
+        currentOrderStatus: { status: "Order Placed" },
+        totalQty,
+        user: _id,
+      })
+      const newOrder = await order.save()
+      // remove product from user cart
+      await User.findOneAndUpdate(
+        { _id },
+        { "cart.products": [] },
+        { new: true }
+      )
+      if (newOrder) createSuccessResponse(res, newOrder, 200)
+      else {
+        res.status(400)
+        throw new Error("Something Went Wrong")
+      }
+    } else {
+      res.status(400)
+      throw new Error("No Items In Cart")
+    }
   } else {
     res.status(400)
     throw new Error("Please Add Valid Address")
