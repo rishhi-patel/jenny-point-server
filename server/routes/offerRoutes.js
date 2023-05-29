@@ -3,6 +3,7 @@ const {
   getOffers,
   updateOffer,
   deleteOffer,
+  getOfferById,
 } = require("../controllers/offerController.js")
 const { protect, admin } = require("../middleware/authMiddleware.js")
 
@@ -15,4 +16,5 @@ module.exports = (router) => {
     .route("/offer/:_id")
     .put(protect, admin, updateOffer)
     .delete(protect, admin, deleteOffer)
+    .get(protect, getOfferById)
 }

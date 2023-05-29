@@ -26,7 +26,11 @@ const getOffers = asyncHandler(async (req, res) => {
 // @access  Private
 const createOffer = asyncHandler(async (req, res) => {
   const data = await Offer.create({ ...req.body })
-  createSuccessResponse(res, data, 200, "Offer Added")
+  if (data) createSuccessResponse(res, data, 200, "Offer Added")
+  else {
+    res.status(400)
+    throw new Error("Something Went Wrong")
+  }
 })
 
 // @desc    Update Offer
@@ -42,7 +46,7 @@ const updateOffer = asyncHandler(async (req, res) => {
 })
 
 // @desc    Delete Offer
-// @route   DELETE /api/offer/:_id
+// @route   GET /api/offer/:_id
 // @access  Private
 const deleteOffer = asyncHandler(async (req, res) => {
   const { _id } = req.params
@@ -53,4 +57,24 @@ const deleteOffer = asyncHandler(async (req, res) => {
   createSuccessResponse(res, data, 200, "Offer Deleted")
 })
 
-module.exports = { createOffer, getOffers, updateOffer, deleteOffer }
+// @desc    GET Offer bt ID
+// @route   GET /api/offer/:_id
+// @access  Private
+const getOfferById = asyncHandler(async (req, res) => {
+  const { _id } = req.params
+  const data = await Offer.findOne({ _id })
+  if (data) {
+    createSuccessResponse(res, data, 200, "Offer Deleted")
+  } else {
+    res.status(400)
+    throw new Error("Offer Not Found")
+  }
+})
+
+module.exports = {
+  createOffer,
+  getOffers,
+  updateOffer,
+  deleteOffer,
+  getOfferById,
+}

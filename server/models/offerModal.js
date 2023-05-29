@@ -5,7 +5,6 @@ const offerSchema = mongoose.Schema(
     title: { type: String, required: true },
     image: {},
     validTill: { type: String, required: true },
-    description: { type: String, required: true },
     offerType: {
       type: String,
       enum: ["flat", "percentage"],
