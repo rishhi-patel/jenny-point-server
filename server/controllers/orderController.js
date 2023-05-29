@@ -105,11 +105,11 @@ const createOrder = asyncHandler(async (req, res) => {
       })
       const newOrder = await order.save()
       // remove product from user cart
-      await User.findOneAndUpdate(
-        { _id },
-        { "cart.products": [] },
-        { new: true }
-      )
+      // await User.findOneAndUpdate(
+      //   { _id },
+      //   { "cart.products": [] },
+      //   { new: true }
+      // )
       if (newOrder) createSuccessResponse(res, newOrder, 200)
       else {
         res.status(400)
@@ -130,37 +130,43 @@ const createOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrderByID = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const data = await Order.aggregate([
-    { $match: { _id: ObjectId(_id) } },
-    {
-      $lookup: {
-        from: "users",
-        let: { userId: "$user" },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ["$_id", "$$userId"] },
-            },
-          },
+  // const data = await Order.aggregate([
+  //   { $match: { _id: ObjectId(_id) } },
+  //   {
+  //     $lookup: {
+  //       from: "users",
+  //       let: { userId: "$user" },
+  //       pipeline: [
+  //         {
+  //           $match: {
+  //             $expr: { $eq: ["$_id", "$$userId"] },
+  //           },
+  //         },
 
-          {
-            $project: {
-              _id: 0,
-              name: 1,
-              email: 1,
-              mobileNo: 1,
-            },
-          },
-        ],
-        as: "user",
-      },
-    },
-    {
-      $unwind: "$user",
-    },
-  ])
+  //         {
+  //           $project: {
+  //             _id: 0,
+  //             name: 1,
+  //             email: 1,
+  //             mobileNo: 1,
+  //           },
+  //         },
+  //       ],
+  //       as: "user",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$user",
+  //   },
+  // ])
   // const data = await Order.findOne({ _id })
-  createSuccessResponse(res, data[0], 200)
+
+  const data = await Order.findOne({ _id })
+    .populate("distributor", ["name"])
+    .populate("user", ["name", "email", "mobileNo"])
+    .populate("deliveryPerson", ["name"])
+    .populate("wareHouseManager", ["name"])
+  createSuccessResponse(res, data, 200)
 })
 
 // @desc    get order By ID
