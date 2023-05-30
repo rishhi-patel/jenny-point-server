@@ -105,12 +105,12 @@ const createOrder = asyncHandler(async (req, res) => {
       })
       const newOrder = await order.save()
       // remove product from user cart
-      // await User.findOneAndUpdate(
-      //   { _id },
-      //   { "cart.products": [] },
-      //   { new: true }
-      // )
-      if (newOrder) createSuccessResponse(res, newOrder, 200)
+      await User.findOneAndUpdate(
+        { _id },
+        { "cart.products": [] },
+        { new: true }
+      )
+      if (newOrder) createSuccessResponse(res, newOrder, 200, "Order Placed")
       else {
         res.status(400)
         throw new Error("Something Went Wrong")
@@ -294,7 +294,7 @@ const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
     {
       $project: {
         _id: 0,
-        label: "$name",
+        name: "$name",
         value: { $toString: "$_id" },
       },
     },
@@ -304,7 +304,7 @@ const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
     {
       $project: {
         _id: 0,
-        label: "$name",
+        name: "$name",
         value: { $toString: "$_id" },
       },
     },
@@ -421,9 +421,29 @@ const assignOrder = asyncHandler(async (req, res) => {
 // @desc    markAsdelivered
 // @route   PATCH /api/order/:_id
 // @access  Private
+const markAsdeliveredRequest = asyncHandler(async (req, res) => {
+  const { _id } = req.params
+
+  const existOrder = await Order.findOne({ _id })
+  if (existOrder) {
+    const otp = 987654
+    const existUser = await User.findOneAndUpdate(
+      { _id: existOrder.user },
+      { otp },
+      { new: true }
+    )
+    createSuccessResponse(res, null, 200, "OTP Sent")
+  } else {
+    res.status(400)
+    throw new Error("Order Not Found")
+  }
+})
+// @desc    markAsdelivered
+// @route   PATCH /api/order/:_id
+// @access  Private
 const markAsdelivered = asyncHandler(async (req, res) => {
   const { _id } = req.params
-  const { status } = req.body
+  const { otp } = req.body
 
   const existOrder = await Order.findOne({ _id })
 
@@ -448,7 +468,7 @@ const markAsdelivered = asyncHandler(async (req, res) => {
         new: true,
       }
     )
-    createSuccessResponse(res, updatedOrder, 200)
+    createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
   }
 })
 module.exports = {
@@ -463,4 +483,6 @@ module.exports = {
   getWareHouseOrders,
   getAdminDistributors,
   getWarhouseAndDeliveryPerson,
+  markAsdeliveredRequest,
+  markAsdelivered,
 }

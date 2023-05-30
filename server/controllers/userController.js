@@ -150,7 +150,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       { new: true }
     )
 
-    createSuccessResponse(res, updatedUser, 200, "User Details Updated")
+    createSuccessResponse(res, updatedUser, 200, "Profile Updated")
   } else {
     res.status(400)
     throw new Error("User Not Found")
