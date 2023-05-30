@@ -261,7 +261,7 @@ const getOrderByID = asyncHandler(async (req, res) => {
     },
   ])
 
-  createSuccessResponse(res, data, 200)
+  createSuccessResponse(res, data[0], 200)
 })
 
 // @desc    get order By ID
