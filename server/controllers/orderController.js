@@ -426,7 +426,7 @@ const markAsdeliveredRequest = asyncHandler(async (req, res) => {
 
   const existOrder = await Order.findOne({ _id })
   if (existOrder) {
-    const otp = 987654
+    const otp = 9876
     const existUser = await User.findOneAndUpdate(
       { _id: existOrder.user },
       { otp },
