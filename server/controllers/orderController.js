@@ -446,29 +446,36 @@ const markAsdelivered = asyncHandler(async (req, res) => {
   const { otp } = req.body
 
   const existOrder = await Order.findOne({ _id })
+  if (existOrder) {
+    const existUser = await User.findOne({ _id: existOrder.user }).select([
+      "-password",
+    ])
 
-  const existUser = await User.findOne({ _id: existOrder.user }).select([
-    "-password",
-  ])
-
-  if (existUser && existUser.otp === otp) {
-    existUser.otp = null
-    await existUser.save()
-    const updatedOrder = await Order.findOneAndUpdate(
-      { _id },
-      {
-        $push: {
-          orderTrack: {
-            status: "Delivered",
+    if (existUser && existUser.otp === otp) {
+      existUser.otp = null
+      await existUser.save()
+      const updatedOrder = await Order.findOneAndUpdate(
+        { _id },
+        {
+          $push: {
+            orderTrack: {
+              status: "Delivered",
+            },
           },
+          currentOrderStatus: { status: "Delivered" },
         },
-        currentOrderStatus: { status: "Delivered" },
-      },
-      {
-        new: true,
-      }
-    )
-    createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
+        {
+          new: true,
+        }
+      )
+      createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
+    } else {
+      res.status(400)
+      throw new Error("Invalid OTP")
+    }
+  } else {
+    res.status(400)
+    throw new Error("Order Not Found")
   }
 })
 module.exports = {
