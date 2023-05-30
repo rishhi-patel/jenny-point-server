@@ -39,7 +39,7 @@ module.exports = (router) => {
   // deliveryPerson
   router
     .route("/delivery/order")
-    .get(protect, getWareHouseOrders)
+    .get(protect, getDeliveryPersonOrders)
     .patch(protect, assignOrder)
   // Admin routes
   router
