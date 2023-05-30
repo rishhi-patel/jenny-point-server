@@ -154,10 +154,20 @@ const getHomeScreenData = asyncHandler(async (req, res) => {
   const { brand } = req.query
   let keyword = req.query.keyword
     ? {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
-        },
+        $or: [
+          {
+            name: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+          {
+            productCode: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+        ],
       }
     : {}
   if (brand) {

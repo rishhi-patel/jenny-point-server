@@ -165,10 +165,26 @@ const getUsers = asyncHandler(async (req, res) => {
   const { _id } = req.user
   let keyword = req.query.keyword
     ? {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
-        },
+        $or: [
+          {
+            name: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+          {
+            address: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+          {
+            gstNo: {
+              $regex: req.query.keyword,
+              $options: "i",
+            },
+          },
+        ],
       }
     : {}
 
