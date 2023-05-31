@@ -78,11 +78,12 @@ const teamsLogin = asyncHandler(async (req, res) => {
 // @route   POST /api/user/admin/verify-otp
 // @access  Public
 const verifyOTP = asyncHandler(async (req, res) => {
-  const { mobileNo, otp } = req.body
+  const { mobileNo, otp, fcmToken } = req.body
   const existUser = await User.findOne({ mobileNo }).select(["-password"])
 
   if (existUser && existUser.otp === otp) {
     existUser.otp = null
+    if (fcmToken) existUser.fcmToken = fcmToken
     await existUser.save()
     createSuccessResponse(
       res,
