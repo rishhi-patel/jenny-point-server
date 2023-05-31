@@ -3,6 +3,7 @@ const { createSuccessResponse, getCartDetails } = require("../utils/utils")
 const Order = require("../models/orderModal")
 const mongoose = require("mongoose")
 const User = require("../models/userModel")
+const firebaseService = require("../utils/firebaseService")
 const ObjectId = mongoose.Types.ObjectId
 
 // @desc    Fetch all orders
@@ -321,22 +322,61 @@ const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { status } = req.body
+  const existOrder = await Order.findOne({ _id })
 
-  const updatedOrder = await Order.findOneAndUpdate(
-    { _id },
-    {
-      $push: {
-        orderTrack: {
-          status,
+  if (existOrder) {
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id },
+      {
+        $push: {
+          orderTrack: {
+            status,
+          },
         },
+        currentOrderStatus: { status },
       },
-      currentOrderStatus: { status },
-    },
-    {
-      new: true,
+      {
+        new: true,
+      }
+    )
+
+    const distributor = await User.findOne({ _id: existOrder.distributor })
+    const delivery = await User.findOne({ _id: existOrder.deliveryPerson })
+    const customer = await User.findOne({ _id: existOrder.user })
+    switch (status) {
+      case "Out for Delivery":
+        {
+          if (distributor && distributor.fcmToken) {
+            const { fcmToken } = distributor
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+            })
+          }
+          if (delivery && delivery.fcmToken) {
+            const { fcmToken } = delivery
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+            })
+          }
+          if (customer && customer.fcmToken) {
+            const { fcmToken } = customer
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+            })
+          }
+        }
+        break
+      default:
+        break
     }
-  )
-  createSuccessResponse(res, updatedOrder, 200)
+    createSuccessResponse(res, updatedOrder, 200)
+  } else {
+    res.status(400)
+    throw new Error("Order Not Found")
+  }
 })
 // @desc    assign  order
 // @route   PUT /api/order/:_id
@@ -345,6 +385,18 @@ const assignOrder = asyncHandler(async (req, res) => {
   const { _id } = req.params
   const { key, value } = req.body
   const existOrder = await Order.findOne({ _id })
+  const targetUser = await User.findOne({ _id: value })
+  const customer = await User.findOne({ _id: existOrder.user })
+
+  const updatedOrder = await Order.findOneAndUpdate(
+    { _id },
+    {
+      [key]: value,
+    },
+    {
+      new: true,
+    }
+  )
 
   if (existOrder && !existOrder[key]) {
     switch (key) {
@@ -364,6 +416,20 @@ const assignOrder = asyncHandler(async (req, res) => {
               new: true,
             }
           )
+          if (targetUser && targetUser.fcmToken) {
+            const { fcmToken } = targetUser
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+            })
+          }
+          if (customer && customer.fcmToken) {
+            const { fcmToken } = customer
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Order In Packaging: Your Order ${_id} is now in packaging.`,
+            })
+          }
         }
         break
       case "distributor":
@@ -382,42 +448,32 @@ const assignOrder = asyncHandler(async (req, res) => {
               new: true,
             }
           )
+          if (targetUser && targetUser.fcmToken) {
+            const { fcmToken } = targetUser
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+            })
+          }
         }
         break
-      // case "deliveryPerson":
-      //   {
-      //     await Order.findOneAndUpdate(
-      //       { _id },
-      //       {
-      //         $push: {
-      //           orderTrack: {
-      //             status: "Out for Delivery",
-      //           },
-      //         },
-      //         currentOrderStatus: { status: "Out for Delivery" },
-      //       },
-      //       {
-      //         new: true,
-      //       }
-      //     )
-      //   }
-
-      //   break
+      case "deliveryPerson":
+        {
+          if (targetUser && targetUser.fcmToken) {
+            const { fcmToken } = targetUser
+            firebaseService.sendNotification({
+              fcmToken,
+              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+            })
+          }
+        }
+        break
 
       default:
         break
     }
   }
 
-  const updatedOrder = await Order.findOneAndUpdate(
-    { _id },
-    {
-      [key]: value,
-    },
-    {
-      new: true,
-    }
-  )
   createSuccessResponse(res, updatedOrder, 200, `Order Assigned`)
 })
 
@@ -471,6 +527,32 @@ const markAsdelivered = asyncHandler(async (req, res) => {
           new: true,
         }
       )
+      const distributor = await User.findOne({ _id: existOrder.distributor })
+      const wareHouseManager = await User.findOne({
+        _id: existOrder.wareHouseManager,
+      })
+      const customer = await User.findOne({ _id: existOrder.user })
+      if (distributor && distributor.fcmToken) {
+        const { fcmToken } = distributor
+        firebaseService.sendNotification({
+          fcmToken,
+          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+        })
+      }
+      if (wareHouseManager && wareHouseManager.fcmToken) {
+        const { fcmToken } = wareHouseManager
+        firebaseService.sendNotification({
+          fcmToken,
+          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+        })
+      }
+      if (customer && customer.fcmToken) {
+        const { fcmToken } = customer
+        firebaseService.sendNotification({
+          fcmToken,
+          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+        })
+      }
       createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
     } else {
       res.status(400)
