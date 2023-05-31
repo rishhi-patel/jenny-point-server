@@ -1,4 +1,4 @@
-const { messaging, initializeApp } = require("firebase-admin")
+const admin = require("firebase-admin")
 
 const serviceAccount = {
   TYPE: process.env.TYPE,
@@ -14,10 +14,15 @@ const serviceAccount = {
   universe_domain: process.env.UNIVERSE_DOMAIN,
 }
 
-// Initialize Firebase Admin SDK
-initializeApp({
-  credential: messaging.credential.cert(serviceAccount),
-})
+console.log({ serviceAccount })
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://jenny-point-default-rtdb.firebaseio.com",
+  })
+}
+
 const notification_options = {
   priority: "high",
   timeToLive: 60 * 60 * 24,
@@ -32,7 +37,9 @@ const firebaseService = {
       },
     }
     try {
-      const data = await messaging().sendToDevice(fcmToken, payload, options)
+      const data = await admin
+        .messaging()
+        .sendToDevice(fcmToken, payload, options)
       return data
     } catch (error) {
       console.log({ error })
