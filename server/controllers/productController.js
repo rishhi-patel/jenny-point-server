@@ -16,23 +16,25 @@ const getProducts = asyncHandler(async (req, res) => {
     ? [
         {
           $match: {
-            name: {
-              $regex: req.query.keyword,
-              $options: "i",
-            },
+            $or: [
+              {
+                name: {
+                  $regex: req.query.keyword,
+                  $options: "i",
+                },
+              },
+              {
+                productCode: {
+                  $regex: req.query.keyword,
+                  $options: "i",
+                },
+              },
+              // Add more conditions as needed
+            ],
           },
         },
       ]
-    : [
-        { $match: { name: { $exists: true } } },
-        {
-          $addFields: {
-            price: {
-              $subtract: ["$price", "$discount"],
-            },
-          },
-        },
-      ]
+    : [{ $match: { name: { $exists: true } } }]
 
   // filter based on brand
   if (brand) {
