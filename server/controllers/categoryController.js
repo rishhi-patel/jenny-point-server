@@ -1,7 +1,6 @@
 const asyncHandler = require("express-async-handler")
 const Category = require("../models/categoryModal")
 const awsService = require("../utils/aws")
-const sharp = require("sharp")
 const { createSuccessResponse } = require("../utils/utils")
 
 // @desc    Fetch all Categories
@@ -35,10 +34,6 @@ const createCategory = asyncHandler(async (req, res) => {
   } else {
     if (name) {
       if (req.file) {
-        const newBuffer = await sharp(req.file.buffer)
-          .resize({ width: 255, height: 150, fit: "fill" })
-          .toBuffer()
-        req.file.buffer = newBuffer
         const result = await awsService.uploadFile(req)
         const newCategory = new Category({
           name,
@@ -69,10 +64,6 @@ const updateCategory = asyncHandler(async (req, res) => {
   if (result) {
     if (name) {
       if (req.file) {
-        const newBuffer = await sharp(req.file.buffer)
-          .resize({ width: 255, height: 150, fit: "fill" })
-          .toBuffer()
-        req.file.buffer = newBuffer
         const img = await awsService.uploadFile(req)
         result.image = img
       }

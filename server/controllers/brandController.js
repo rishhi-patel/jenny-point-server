@@ -58,16 +58,21 @@ const updateBrand = asyncHandler(async (req, res) => {
 
   const result = await Brand.findById({ _id })
   if (result) {
-    if (req.file) {
-      const img = await awsService.uploadFile(req)
-      result.image = img
+    if (name) {
+      if (req.file) {
+        const img = await awsService.uploadFile(req)
+        result.image = img
+      }
+      result.name = name
+      await result.save()
+      const updatedBrands = await Brand.find({}).sort({
+        createdAt: -1,
+      })
+      createSuccessResponse(res, updatedBrands, 200, "Brand Updated")
+    } else {
+      res.status(400)
+      throw new Error(`Name Is Required`)
     }
-    result.name = name
-    await result.save()
-    const updatedBrands = await Brand.find({}).sort({
-      createdAt: -1,
-    })
-    createSuccessResponse(res, updatedBrands, 200, "Brand Updated")
   } else {
     res.status(404)
     throw new Error(`No Brand found`)
