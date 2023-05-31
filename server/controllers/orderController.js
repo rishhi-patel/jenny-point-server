@@ -293,7 +293,7 @@ const getAdminDistributors = asyncHandler(async (req, res) => {
 const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
   const { _id } = req.user
   const wareHouseManagerList = await User.aggregate([
-    { $match: { user: _id, userType: "wareHouseManager" } },
+    { $match: { user: _id, userType: "wareHouseManager", isBlocked: false } },
     {
       $project: {
         _id: 0,
@@ -303,7 +303,7 @@ const getWarhouseAndDeliveryPerson = asyncHandler(async (req, res) => {
     },
   ])
   const deliveryPersonList = await User.aggregate([
-    { $match: { user: _id, userType: "deliveryPerson" } },
+    { $match: { user: _id, userType: "deliveryPerson", isBlocked: false } },
     {
       $project: {
         _id: 0,
