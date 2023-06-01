@@ -9,7 +9,7 @@ const statusSchema = mongoose.Schema(
         "In Process",
         "In Packaging",
         "Out for Delivery",
-        "Delivered ",
+        "Delivered",
         "Cancelled",
       ],
       default: "Order Placed",

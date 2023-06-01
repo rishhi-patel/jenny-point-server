@@ -10,10 +10,36 @@ const ObjectId = mongoose.Types.ObjectId
 // @route   GET /api/order/admin
 // @access  Private
 const getAdminOrders = asyncHandler(async (req, res) => {
-  const { status } = req.query
-  const keyword = status ? { "currentOrderStatus.status": status } : {}
+  const { status, endDate, startDate } = req.query
+  let keyword = status ? { "currentOrderStatus.status": status } : {}
+
+  const newStartDate = new Date(startDate)
+  const newEndDate = new Date(endDate)
+  newEndDate.setDate(newEndDate.getDate() + 1)
+
+  if (endDate && startDate) {
+    keyword = {
+      ...keyword,
+      createdAt: {
+        $gte: newStartDate,
+        $lte: newEndDate,
+      },
+    }
+  }
+
+  if (newStartDate.getTime() === newEndDate.getTime()) {
+    keyword.createdAt.$lt = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    )
+  }
+
   const data = await Order.find({ ...keyword })
     .populate("distributor", ["name"])
+    .populate("user", ["name"])
+    .populate("wareHouseManager", ["name"])
+    .populate("deliveryPerson", ["name"])
     .sort({
       createdAt: -1,
     })
