@@ -412,19 +412,19 @@ const assignOrder = asyncHandler(async (req, res) => {
   const { key, value } = req.body
   const existOrder = await Order.findOne({ _id })
   const targetUser = await User.findOne({ _id: value })
-  const customer = await User.findOne({ _id: existOrder.user })
+  if (existOrder && targetUser) {
+    const customer = await User.findOne({ _id: existOrder.user })
 
-  const updatedOrder = await Order.findOneAndUpdate(
-    { _id },
-    {
-      [key]: value,
-    },
-    {
-      new: true,
-    }
-  )
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id },
+      {
+        [key]: value,
+      },
+      {
+        new: true,
+      }
+    )
 
-  if (existOrder && !existOrder[key]) {
     switch (key) {
       case "wareHouseManager":
         {
@@ -474,8 +474,10 @@ const assignOrder = asyncHandler(async (req, res) => {
               new: true,
             }
           )
+          console.log({ targetUser })
           if (targetUser && targetUser.fcmToken) {
             const { fcmToken } = targetUser
+            console.log({ fcmToken })
             firebaseService.sendNotification({
               fcmToken,
               message: `Order Assigned: New Order ${_id} has been assigned to you.`,
@@ -498,9 +500,12 @@ const assignOrder = asyncHandler(async (req, res) => {
       default:
         break
     }
-  }
 
-  createSuccessResponse(res, updatedOrder, 200, `Order Assigned`)
+    createSuccessResponse(res, updatedOrder, 200, `Order Assigned`)
+  } else {
+    res.status(400)
+    throw new Error(`Order Or ${key} Not Found `)
+  }
 })
 
 // @desc    markAsdelivered
