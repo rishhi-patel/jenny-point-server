@@ -1,3 +1,4 @@
+const multer = require("multer")
 const {
   getAdminOrders,
   getDistributorOrders,
@@ -12,7 +13,10 @@ const {
   getWarhouseAndDeliveryPerson,
   markAsdeliveredRequest,
   markAsdelivered,
+  uploadInvoice,
 } = require("../controllers/orderController")
+const storage = multer.memoryStorage()
+const upload = multer({ storage: storage })
 const { protect, admin } = require("../middleware/authMiddleware")
 
 module.exports = (router) => {
@@ -26,6 +30,9 @@ module.exports = (router) => {
     .get(protect, getOrderByID)
     .patch(protect, assignOrder)
     .put(protect, updateOrderStatus)
+  router
+    .route("/order/:_id/invoice")
+    .post(protect, upload.single("image"), uploadInvoice)
   // Distributor routes
   router
     .route("/distributor/order")

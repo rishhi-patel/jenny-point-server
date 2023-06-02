@@ -4,6 +4,7 @@ const Order = require("../models/orderModal")
 const mongoose = require("mongoose")
 const User = require("../models/userModel")
 const firebaseService = require("../utils/firebaseService")
+const awsService = require("../utils/aws")
 const ObjectId = mongoose.Types.ObjectId
 
 // @desc    Fetch all orders
@@ -594,6 +595,26 @@ const markAsdelivered = asyncHandler(async (req, res) => {
     throw new Error("Order Not Found")
   }
 })
+
+// @desc    upload product image
+// @route   POST /api/products/upload
+// @access  Private/Admin
+const uploadInvoice = asyncHandler(async (req, res) => {
+  const { _id } = req.params
+  if (req.file) {
+    const invoice = await awsService.uploadFile(req)
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id },
+      { invoice },
+      { new: true }
+    )
+    console.log({ invoice, _id, updatedOrder })
+    createSuccessResponse(res, updatedOrder, 200, "Invoice Uploaded")
+  } else {
+    res.status(400)
+    throw new Error("Invalid Image Type")
+  }
+})
 module.exports = {
   getAdminOrders,
   getDistributorOrders,
@@ -608,4 +629,5 @@ module.exports = {
   getWarhouseAndDeliveryPerson,
   markAsdeliveredRequest,
   markAsdelivered,
+  uploadInvoice,
 }

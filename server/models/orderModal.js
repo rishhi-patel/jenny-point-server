@@ -55,6 +55,10 @@ const orderSchema = mongoose.Schema(
     currentOrderStatus: statusSchema,
     totalPrice: { type: Number, required: true },
     totalQty: { type: Number, required: true },
+    invoice: {
+      url: { type: String, default: "" },
+      key: { type: String, default: "" },
+    },
   },
   {
     timestamps: true,
