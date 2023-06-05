@@ -568,21 +568,21 @@ const markAsdelivered = asyncHandler(async (req, res) => {
         const { fcmToken } = distributor
         firebaseService.sendNotification({
           fcmToken,
-          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+          message: `Order Delivered: Order ${_id} is delivered successfully.`,
         })
       }
       if (wareHouseManager && wareHouseManager.fcmToken) {
         const { fcmToken } = wareHouseManager
         firebaseService.sendNotification({
           fcmToken,
-          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+          message: `Order Delivered: Order ${_id} is delivered successfully.`,
         })
       }
       if (customer && customer.fcmToken) {
         const { fcmToken } = customer
         firebaseService.sendNotification({
           fcmToken,
-          message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+          message: `Order Delivered: Order ${_id} is delivered successfully.`,
         })
       }
       createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
