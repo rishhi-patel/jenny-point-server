@@ -4,6 +4,7 @@ const ObjectId = require("mongoose").Types.ObjectId
 const { createSuccessResponse } = require("../utils/utils.js")
 const awsService = require("../utils/aws.js")
 const Brand = require("../models/brandModal.js")
+const Offer = require("../models/offerModal.js")
 
 // @desc  Get Products
 // @route   GET /api/products
@@ -178,7 +179,10 @@ const getHomeScreenData = asyncHandler(async (req, res) => {
   }
   const brands = await Brand.find({}).select("name")
   const products = await Product.find({ ...keyword })
-  createSuccessResponse(res, { brands, products }, 200)
+  const offers = await Offer.find({}).sort({
+    createdAt: -1,
+  })
+  createSuccessResponse(res, { brands, products, offers }, 200)
 })
 
 // @desc    upload product image
