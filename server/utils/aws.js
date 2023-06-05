@@ -39,7 +39,6 @@ const awsService = {
       Key: fileKey,
       Expires: 60 * 5,
     }
-    console.log({ getParams })
     return { url: await s3.getSignedUrlPromise("getObject", getParams) }
   },
 }

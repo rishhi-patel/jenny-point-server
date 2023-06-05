@@ -27,11 +27,12 @@ const notification_options = {
 }
 
 const firebaseService = {
-  sendNotification: async ({ fcmToken, message }) => {
+  sendNotification: async ({ fcmToken, message, title }) => {
     const options = notification_options
     var payload = {
       notification: {
-        title: message,
+        title,
+        body: message,
       },
     }
     try {

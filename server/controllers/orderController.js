@@ -87,8 +87,6 @@ const getCustomerOrders = asyncHandler(async (req, res) => {
   const keyword = status
     ? { user: _id, "currentOrderStatus.status": status }
     : { user: _id }
-
-  console.log({ keyword })
   const data = await Order.find({ ...keyword }).sort({
     createdAt: -1,
   })
@@ -377,21 +375,24 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
             const { fcmToken } = distributor
             firebaseService.sendNotification({
               fcmToken,
-              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+              message: `Order ${_id} is now out for delivery.`,
+              title: "Out For Delivery",
             })
           }
           if (delivery && delivery.fcmToken) {
             const { fcmToken } = delivery
             firebaseService.sendNotification({
               fcmToken,
-              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+              message: `Order ${_id} is now out for delivery.`,
+              title: "Out For Delivery",
             })
           }
           if (customer && customer.fcmToken) {
             const { fcmToken } = customer
             firebaseService.sendNotification({
               fcmToken,
-              message: `Out For Delivery: Order ${_id} is now out for delivery.`,
+              message: `Order ${_id} is now out for delivery.`,
+              title: "Out For Delivery",
             })
           }
         }
@@ -447,14 +448,16 @@ const assignOrder = asyncHandler(async (req, res) => {
             const { fcmToken } = targetUser
             firebaseService.sendNotification({
               fcmToken,
-              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+              message: `New Order ${_id} has been assigned to you.`,
+              title: "Order Assigned",
             })
           }
           if (customer && customer.fcmToken) {
             const { fcmToken } = customer
             firebaseService.sendNotification({
               fcmToken,
-              message: `Order In Packaging: Your Order ${_id} is now in packaging.`,
+              message: `Your Order ${_id} is now in packaging.`,
+              title: "Order In Packaging",
             })
           }
         }
@@ -475,13 +478,13 @@ const assignOrder = asyncHandler(async (req, res) => {
               new: true,
             }
           )
-          console.log({ targetUser })
+
           if (targetUser && targetUser.fcmToken) {
             const { fcmToken } = targetUser
-            console.log({ fcmToken })
             firebaseService.sendNotification({
               fcmToken,
-              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+              message: `New Order ${_id} has been assigned to you.`,
+              title: "Order Assigned",
             })
           }
         }
@@ -492,7 +495,8 @@ const assignOrder = asyncHandler(async (req, res) => {
             const { fcmToken } = targetUser
             firebaseService.sendNotification({
               fcmToken,
-              message: `Order Assigned: New Order ${_id} has been assigned to you.`,
+              message: `New Order ${_id} has been assigned to you.`,
+              title: "Order Assigned",
             })
           }
         }
@@ -568,21 +572,24 @@ const markAsdelivered = asyncHandler(async (req, res) => {
         const { fcmToken } = distributor
         firebaseService.sendNotification({
           fcmToken,
-          message: `Order Delivered: Order ${_id} is delivered successfully.`,
+          message: `Order ${_id} is delivered successfully.`,
+          title: "Order Delivered",
         })
       }
       if (wareHouseManager && wareHouseManager.fcmToken) {
         const { fcmToken } = wareHouseManager
         firebaseService.sendNotification({
           fcmToken,
-          message: `Order Delivered: Order ${_id} is delivered successfully.`,
+          message: `Order ${_id} is delivered successfully.`,
+          title: "Order Delivered",
         })
       }
       if (customer && customer.fcmToken) {
         const { fcmToken } = customer
         firebaseService.sendNotification({
           fcmToken,
-          message: `Order Delivered: Order ${_id} is delivered successfully.`,
+          message: `Order ${_id} is delivered successfully.`,
+          title: "Order Delivered",
         })
       }
       createSuccessResponse(res, updatedOrder, 200, "Order Status Updated")
@@ -608,7 +615,6 @@ const uploadInvoice = asyncHandler(async (req, res) => {
       { invoice },
       { new: true }
     )
-    console.log({ invoice, _id, updatedOrder })
     createSuccessResponse(res, updatedOrder, 200, "Invoice Uploaded")
   } else {
     res.status(400)
