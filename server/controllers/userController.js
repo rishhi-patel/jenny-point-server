@@ -298,6 +298,15 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
 // @desc  delete account
 // @route   DELETE /api/user
 // @access  private
+const deleteAccount = asyncHandler(async (req, res) => {
+  const { _id } = req.user
+  await User.findOneAndDelete({ _id })
+  createSuccessResponse(res, null, 200, "Account Deleted")
+})
+
+// @desc  delete account
+// @route   DELETE /api/user
+// @access  private
 const getUserCartDetails = asyncHandler(async (req, res) => {
   const { _id } = req.user
   const cart = await getCartDetails(_id)
@@ -360,4 +369,5 @@ module.exports = {
   adminLogin,
   teamsLogin,
   createUser,
+  deleteAccount,
 }
