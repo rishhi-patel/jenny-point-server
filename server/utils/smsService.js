@@ -14,7 +14,14 @@ const smsService = {
     return await msg91.sendSMS(args)
   },
 
-  generateOTP: () => Math.floor(100000 + Math.random() * 900000) || 987654,
+  generateOTP: (length = 6) => {
+    // Math.floor(100000 + Math.random() * 900000) || 987654,
+    let randomNumber = ""
+    for (let i = 0; i < length; i++) {
+      randomNumber += Math.floor(Math.random() * 10)
+    }
+    return randomNumber
+  },
 }
 
 module.exports = smsService

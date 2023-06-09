@@ -5,6 +5,7 @@ const mongoose = require("mongoose")
 const User = require("../models/userModel")
 const firebaseService = require("../utils/firebaseService")
 const awsService = require("../utils/aws")
+const { sendOtpToMobile, generateOTP } = require("../utils/smsService")
 const ObjectId = mongoose.Types.ObjectId
 
 // @desc    Fetch all orders
@@ -521,12 +522,13 @@ const markAsdeliveredRequest = asyncHandler(async (req, res) => {
 
   const existOrder = await Order.findOne({ _id })
   if (existOrder) {
-    const otp = 9876
+    const otp = generateOTP(4)
     const existUser = await User.findOneAndUpdate(
       { _id: existOrder.user },
       { otp },
       { new: true }
     )
+    await sendOtpToMobile(existUser.mobileNo, otp)
     createSuccessResponse(res, null, 200, "OTP Sent")
   } else {
     res.status(400)
