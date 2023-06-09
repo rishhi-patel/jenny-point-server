@@ -6,6 +6,7 @@ const {
 } = require("../utils/utils")
 const generateToken = require("../utils/generateToken")
 const User = require("../models/userModel")
+const { sendOtpToMobile, generateOTP } = require("../utils/smsService")
 
 // @desc    Auth user & get OTP
 // @route   POST /api/user/admin/generate-otp
@@ -13,7 +14,7 @@ const User = require("../models/userModel")
 const sendOTP = asyncHandler(async (req, res) => {
   const { mobileNo } = req.body
   let existUser = null
-  const otp = 987654
+  const otp = generateOTP()
   existUser = await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
 
   if (!existUser) {
@@ -23,6 +24,7 @@ const sendOTP = asyncHandler(async (req, res) => {
     })
   }
   if (existUser && !existUser.isBlocked) {
+    sendOtpToMobile(mobileNo, otp)
     createSuccessResponse(res, otp, 200, "OTP sent")
   } else {
     res.status(400)
@@ -36,10 +38,11 @@ const sendOTP = asyncHandler(async (req, res) => {
 const adminLogin = asyncHandler(async (req, res) => {
   const { mobileNo } = req.body
   let existUser = null
-  const otp = 987654
+  const otp = generateOTP()
   existUser = await User.findOne({ mobileNo })
   if (existUser && existUser.userType === "admin") {
     await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
+    sendOtpToMobile(mobileNo, otp)
     createSuccessResponse(res, otp, 200, "OTP sent")
   } else {
     res.status(400)
