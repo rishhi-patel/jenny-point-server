@@ -25,7 +25,7 @@ const sendOTP = asyncHandler(async (req, res) => {
   }
   if (existUser && !existUser.isBlocked) {
     await sendOtpToMobile(mobileNo, otp)
-    createSuccessResponse(res, otp, 200, "OTP sent")
+    createSuccessResponse(res, 200, "OTP sent")
   } else {
     res.status(400)
     throw new Error("User Blocked")
@@ -43,7 +43,7 @@ const adminLogin = asyncHandler(async (req, res) => {
   if (existUser && existUser.userType === "admin") {
     await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
     await sendOtpToMobile(mobileNo, otp)
-    createSuccessResponse(res, otp, 200, "OTP sent")
+    createSuccessResponse(res, 200, "OTP sent")
   } else {
     res.status(400)
     throw new Error("Not Authorized as Admin")
@@ -67,7 +67,7 @@ const teamsLogin = asyncHandler(async (req, res) => {
     if (!existUser.isBlocked) {
       await User.findOneAndUpdate({ mobileNo }, { otp }, { new: true })
       await sendOtpToMobile(mobileNo, otp)
-      createSuccessResponse(res, otp, 200, "OTP sent")
+      createSuccessResponse(res, 200, "OTP sent")
     } else {
       res.status(400)
       throw new Error("User Blocked")
@@ -96,7 +96,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
         token: generateToken(existUser._id),
       },
       200,
-      "OTP verified  "
+      "OTP verified"
     )
   } else {
     res.status(400)

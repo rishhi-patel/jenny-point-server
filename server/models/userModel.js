@@ -64,4 +64,68 @@ const userSchema = mongoose.Schema(
 
 const User = mongoose.model("User", userSchema)
 
+// Check if the user already exists
+User.findOne({ mobileNo: 7621937212 }, (error, existingUser) => {
+  if (error) {
+    console.error(error)
+  } else {
+    if (!existingUser) {
+      const user = new User({
+        name: "Admin User",
+        userType: "admin",
+        mobileNo: 7621937212,
+      })
+
+      user.save((error, savedUser) => {
+        if (error) {
+          console.error(error)
+        } else {
+          console.log("User saved:", savedUser)
+        }
+      })
+    }
+  }
+})
+User.findOne({ mobileNo: 9712992415 }, (error, existingUser) => {
+  if (error) {
+    console.error(error)
+  } else {
+    if (!existingUser) {
+      const user = new User({
+        name: "Admin User",
+        userType: "admin",
+        mobileNo: 9712992415,
+      })
+
+      user.save((error, savedUser) => {
+        if (error) {
+          console.error(error)
+        } else {
+          console.log("User saved:", savedUser)
+        }
+      })
+    }
+  }
+})
+User.findOne({ mobileNo: 9723042479 }, (error, existingUser) => {
+  if (error) {
+    console.error(error)
+  } else {
+    if (!existingUser) {
+      const user = new User({
+        name: "Admin User",
+        userType: "admin",
+        mobileNo: 9723042479,
+      })
+
+      user.save((error, savedUser) => {
+        if (error) {
+          console.error(error)
+        } else {
+          console.log("User saved:", savedUser)
+        }
+      })
+    }
+  }
+})
 module.exports = User
