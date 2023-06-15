@@ -528,7 +528,7 @@ const markAsdeliveredRequest = asyncHandler(async (req, res) => {
       { otp },
       { new: true }
     )
-    await sendOtpToMobile(existUser.mobileNo, otp)
+    await sendOtpToMobile(existUser.mobileNo, otp, "delivery")
     createSuccessResponse(res, null, 200, "OTP Sent")
   } else {
     res.status(400)
