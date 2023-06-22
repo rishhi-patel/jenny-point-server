@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler")
 const Category = require("../models/categoryModal")
 const awsService = require("../utils/aws")
 const { createSuccessResponse } = require("../utils/utils")
+const Product = require("../models/productModal")
 
 // @desc    Fetch all Categories
 // @route   GET /api/Category
@@ -99,6 +100,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
   const result = await Category.findOne({ _id })
   if (result) {
     await result.remove()
+    await Product.deleteMany({ category: _id })
     const updatedCatrgories = await Category.find({}).sort({
       createdAt: -1,
     })
@@ -186,6 +188,7 @@ const deleteSubCategory = asyncHandler(async (req, res) => {
         new: true,
       }
     )
+    await Product.deleteMany({ subCategory: subCategoryId })
     createSuccessResponse(res, updatedSubCategory, 200, "Category Deleted")
   } else {
     res.status(400)
