@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler")
 const Product = require("../models/productModal.js")
 const ObjectId = require("mongoose").Types.ObjectId
-const { createSuccessResponse } = require("../utils/utils.js")
+const { createSuccessResponse, productLookup } = require("../utils/utils.js")
 const awsService = require("../utils/aws.js")
 const Brand = require("../models/brandModal.js")
 const Offer = require("../models/offerModal.js")
@@ -55,7 +55,7 @@ const getProducts = asyncHandler(async (req, res) => {
       keyword.push({ $match: { subCategory: { $in: subCategory.split(";") } } })
   }
 
-  products = await Product.aggregate(keyword)
+  products = await Product.aggregate([...productLookup, ...keyword])
 
   if (products) {
     createSuccessResponse(res, products, 200)
@@ -128,18 +128,32 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getProductById = asyncHandler(async (req, res) => {
   const { _id } = req.params
+  const { lookup } = req.query
+  const pipeline = Boolean(Number(lookup)) ? [] : productLookup
+  let cart = []
 
+  if (req.user) cart = req.user.cart.products.map((elem) => elem.id)
   if (ObjectId.isValid(_id)) {
-    const product = await Product.findOne({ _id }).lean()
-    if (req.user) {
-      product.cart = req.user.cart.products.find(
-        (p) => p.id.toString() === _id.toString()
-      )
-        ? 1
-        : 0
-    } else product.cart = 0
+    const product = await Product.aggregate([
+      ...pipeline,
+      {
+        $match: { _id: ObjectId(_id) },
+      }, // check product availabilty in cart
+      {
+        $addFields: {
+          cart: {
+            $cond: {
+              if: { $in: [ObjectId(_id), cart] },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+      },
+    ])
+
     if (product) {
-      createSuccessResponse(res, product, 200)
+      createSuccessResponse(res, product[0], 200)
     } else {
       res.status(400)
       throw new Error("Product Not Found")

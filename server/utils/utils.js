@@ -130,9 +130,74 @@ const checkUserAccess = (res, userType, targetUserType) => {
       break
   }
 }
+
+const productLookup = [
+  {
+    $match: { _id: { $exists: true } },
+  },
+  // category stage
+  {
+    $lookup: {
+      from: "categories",
+      let: { category_id: "$category" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $eq: ["$_id", "$$category_id"] },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            _id: 0,
+            subCategory: 1,
+          },
+        },
+      ],
+      as: "category",
+    },
+  },
+  {
+    $unwind: {
+      path: "$category",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+
+  {
+    $addFields: {
+      subCategory: {
+        $arrayElemAt: [
+          {
+            $filter: {
+              input: "$category.subCategory",
+              cond: { $eq: ["$$this._id", "$subCategory"] },
+            },
+          },
+          0,
+        ],
+      },
+    },
+  },
+  {
+    $addFields: {
+      category: {
+        $ifNull: ["$category.name", ""],
+      },
+    },
+  },
+  {
+    $addFields: {
+      subCategory: {
+        $ifNull: ["$subCategory.name", ""],
+      },
+    },
+  },
+]
 module.exports = {
   createSuccessResponse,
   createErrorResponse,
   getCartDetails,
   checkUserAccess,
+  productLookup,
 }

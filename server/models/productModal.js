@@ -13,17 +13,16 @@ const productSchema = mongoose.Schema(
     },
     images: [],
     brand: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Brand",
       required: true,
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
     },
-    subCategory: {
-      type: String,
-      required: true,
-    },
+    subCategory: { type: mongoose.Schema.Types.ObjectId, required: true },
     description: {
       type: String,
       required: true,
