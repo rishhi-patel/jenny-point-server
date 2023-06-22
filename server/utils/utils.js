@@ -135,6 +135,40 @@ const productLookup = [
   {
     $match: { _id: { $exists: true } },
   },
+  // Brand Stage
+  {
+    $lookup: {
+      from: "brands",
+      let: { brand_id: "$brand" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $eq: ["$_id", "$$brand_id"] },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            _id: 0,
+          },
+        },
+      ],
+      as: "brand",
+    },
+  },
+  {
+    $unwind: {
+      path: "$brand",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $addFields: {
+      brand: {
+        $ifNull: ["$brand.name", ""],
+      },
+    },
+  },
   // category stage
   {
     $lookup: {
