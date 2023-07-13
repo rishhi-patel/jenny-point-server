@@ -116,32 +116,30 @@ const createOrder = asyncHandler(async (req, res) => {
   const { _id, address } = req.user
   const {
     cart: { products },
-    totalPrice,
-    totalQty,
   } = await getCartDetails(_id)
   if (address.trim()) {
     if (products.length) {
-      const order = new Order({
-        orderItems: products,
-        totalPrice,
-        shippingAddress: address,
-        orderTrack: [{ status: "Order Placed" }],
-        currentOrderStatus: { status: "Order Placed" },
-        totalQty,
-        user: _id,
-      })
-      const newOrder = await order.save()
+      await Promise.all(
+        products.map(async (element) => {
+          const order = new Order({
+            orderItems: [element],
+            totalPrice: element.qty * element.price,
+            shippingAddress: address,
+            orderTrack: [{ status: "Order Placed" }],
+            currentOrderStatus: { status: "Order Placed" },
+            totalQty: element.qty,
+            user: _id,
+          })
+          return await order.save()
+        })
+      )
       // remove product from user cart
       await User.findOneAndUpdate(
         { _id },
         { "cart.products": [] },
         { new: true }
       )
-      if (newOrder) createSuccessResponse(res, newOrder, 200, "Order Placed")
-      else {
-        res.status(400)
-        throw new Error("Something Went Wrong")
-      }
+      createSuccessResponse(res, null, 200, "Order Placed")
     } else {
       res.status(400)
       throw new Error("No Items In Cart")
