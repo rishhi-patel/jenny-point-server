@@ -2,25 +2,21 @@ const mongoose = require("mongoose")
 
 const userSchema = mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
-      default: "Jennypoint User",
+      default: "E-commerce",
+    },
+    lastName: {
+      type: String,
+      default: "User",
     },
     email: {
       type: String,
     },
-    wareHouseName: {
-      type: String,
-    },
+
     userType: {
       type: String,
-      enum: [
-        "admin",
-        "customer",
-        "distributor",
-        "deliveryPerson",
-        "wareHouseManager",
-      ],
+      enum: ["admin", "customer"],
       default: "customer",
     },
     isBlocked: {
@@ -28,7 +24,6 @@ const userSchema = mongoose.Schema(
       default: false,
     },
     mobileNo: { type: Number, required: true },
-    gstNo: { type: String },
     otp: {
       type: Number,
       default: null,
@@ -51,10 +46,6 @@ const userSchema = mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-    fcmToken: {
-      type: String,
-      default: "",
     },
   },
   {

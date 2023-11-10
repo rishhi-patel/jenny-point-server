@@ -1,16 +1,23 @@
 const asyncHandler = require("express-async-handler")
 const Product = require("../models/productModal.js")
 const ObjectId = require("mongoose").Types.ObjectId
-const { createSuccessResponse, productLookup } = require("../utils/utils.js")
+const {
+  createSuccessResponse,
+  productLookup,
+  getRatingArray,
+  checkWishListStatus,
+} = require("../utils/utils.js")
 const awsService = require("../utils/aws.js")
-const Brand = require("../models/brandModal.js")
+const Brand = require("../models/brandModel.js")
+const Category = require("../models/categoryModal")
 const Offer = require("../models/offerModal.js")
+const { default: mongoose } = require("mongoose")
 
 // @desc  Get Products
 // @route   GET /api/products
 // @access  Private/Admin
 const getProducts = asyncHandler(async (req, res) => {
-  const { brand, category, subCategory } = req.query
+  const { brand, category, subCategory, sortBy, rating } = req.query
   let products = []
 
   let keyword = req.query.keyword
@@ -55,6 +62,34 @@ const getProducts = asyncHandler(async (req, res) => {
       keyword.push({ $match: { subCategory: { $in: subCategory.split(";") } } })
   }
 
+  // sort by rating and cost
+  if (sortBy) {
+    switch (sortBy) {
+      case "ratingHighToLow":
+        keyword.push({ $sort: { rating: -1 } })
+        break
+      case "ratingLowToHigh":
+        keyword.push({ $sort: { rating: 1 } })
+        break
+      case "costHighToLow":
+        keyword.push({ $sort: { price: -1 } })
+        break
+      case "costHighLowToHigh":
+        keyword.push({ $sort: { price: 1 } })
+        break
+      default:
+        break
+    }
+  }
+  if (rating) {
+    if (Array.isArray(rating))
+      keyword.push({ $match: { rating: { $in: getRatingArray(rating) } } })
+    else
+      keyword.push({
+        $match: { rating: { $in: getRatingArray(rating.split(";")) } },
+      })
+  }
+
   products = await Product.aggregate([...productLookup, ...keyword])
 
   if (products) {
@@ -69,7 +104,6 @@ const getProducts = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const { _id } = req.user
-
   // changes below are temporary needs to fix  later
   const newProduct = new Product({ ...req.body, createdBy: _id })
   const createdprodut = await newProduct.save()
@@ -167,36 +201,64 @@ const getProductById = asyncHandler(async (req, res) => {
 // @desc    upload product image
 // @route   POST /api/products/upload
 // @access  Private/Admin
+// @desc    Get HomeScreen details
+// @route   GET /api/products/
+// @access  public
 const getHomeScreenData = asyncHandler(async (req, res) => {
-  const { brand } = req.query
-  let keyword = req.query.keyword
+  const keyword = req.query.keyword
     ? {
-        $or: [
-          {
-            name: {
-              $regex: req.query.keyword,
-              $options: "i",
-            },
-          },
-          {
-            productCode: {
-              $regex: req.query.keyword,
-              $options: "i",
-            },
-          },
-        ],
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
       }
     : {}
-  if (brand) {
-    if (Array.isArray(brand)) keyword = { ...keyword, brand: { $in: brand } }
-    else keyword = { ...keyword, brand: { $in: brand.split(";") } }
-  }
-  const brands = await Brand.find({}).select("name")
-  const products = await Product.find({ ...keyword })
-  const offers = await Offer.find({}).sort({
-    createdAt: -1,
-  })
-  createSuccessResponse(res, { brands, products, offers }, 200)
+  const brands = await Brand.find({
+    type: "brand",
+  }).select(["image", "name", "type"])
+  const category = await Category.find({
+    ...keyword,
+    type: "category",
+  }).select(["image", "name", "type"])
+  const newArrivals = await Product.find(keyword)
+    .sort({ createdAt: -1 })
+    .select([
+      "name",
+      "price",
+      "mrp",
+      "rating",
+      "images",
+      "description",
+      "wishList",
+      "nonVeg",
+      "flavour",
+    ])
+    .lean()
+  const trendingProducts = await Product.find({ ...keyword, isTrending: true })
+    .select([
+      "name",
+      "price",
+      "mrp",
+      "rating",
+      "images",
+      "description",
+      "wishList",
+      "flavour",
+      "nonVeg",
+    ])
+    .lean()
+
+  createSuccessResponse(
+    res,
+    {
+      brands,
+      category,
+      newArrivals: checkWishListStatus(newArrivals, req.user),
+      trendingProducts: checkWishListStatus(trendingProducts, req.user),
+    },
+    200,
+    "Product added to wishlist"
+  )
 })
 
 // @desc    upload product image
@@ -231,6 +293,129 @@ const deleteImage = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Add product to Wishlist
+// @route  POST /api/product/wishlist/:productId
+// @access Protected
+const addProductToWishList = asyncHandler(async (req, res) => {
+  const { productId } = req.params
+  const userId = req.user._id // Assuming this is a valid ObjectId string
+
+  // Check for valid ObjectId for both user and product
+  if (
+    !mongoose.Types.ObjectId.isValid(productId) ||
+    !mongoose.Types.ObjectId.isValid(userId)
+  ) {
+    res.status(400)
+    throw new Error("Invalid product or user ID")
+  }
+
+  // Use Mongoose's `$addToSet` operator to ensure the user ID is not added more than once
+  const updatedProduct = await Product.findByIdAndUpdate(
+    productId,
+    { $addToSet: { wishList: userId } },
+    { new: true, runValidators: true }
+  )
+
+  if (!updatedProduct) {
+    res.status(404)
+    throw new Error("Product not found")
+  }
+
+  // If you also keep track of user's wish lists in the User model, you may want to update that too
+
+  // Transform the updatedProduct to add a field indicating the product is in the user's wishlist
+  // This is only necessary if you plan to send back the whole product information including wishlist status
+  const transformedProduct = {
+    ...updatedProduct.toObject(),
+    inWishlist: updatedProduct.wishList.includes(userId),
+  }
+  createSuccessResponse(
+    res,
+    transformedProduct,
+    200,
+    "Product added to wishlist"
+  )
+})
+
+// @desc   Remove product from Wishlist
+// @route  DELETE /api/product/wishlist/:productId
+// @access Protected
+const removeProductFromWishList = asyncHandler(async (req, res) => {
+  const { productId } = req.params
+  const userId = req.user._id // Assuming this is a valid ObjectId string
+
+  // Check for valid ObjectId for both user and product
+  if (
+    !mongoose.Types.ObjectId.isValid(productId) ||
+    !mongoose.Types.ObjectId.isValid(userId)
+  ) {
+    res.status(400)
+    throw new Error("Invalid product or user ID")
+  }
+
+  // Use Mongoose's `$pull` operator to remove the user ID from the product's wishlist
+  const updatedProduct = await Product.findByIdAndUpdate(
+    productId,
+    { $pull: { wishList: userId } },
+    { new: true }
+  )
+
+  if (!updatedProduct) {
+    res.status(404)
+    throw new Error("Product not found")
+  }
+
+  // If you also keep track of user's wish lists in the User model, you may want to update that too
+  createSuccessResponse(
+    res,
+    updatedProduct,
+    200,
+    "Product removed from wishlist"
+  )
+})
+
+// @desc   Get user wishlist
+// @route  GET /api/user/wishlist
+// @access Protected
+const getUserWishList = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const keyword = req.query.keyword
+
+  // Construct match stage for aggregation pipeline
+  let matchStage = {
+    wishList: userId,
+  }
+
+  if (keyword) {
+    matchStage.name = {
+      $regex: keyword,
+      $options: "i", // case-insensitive
+    }
+  }
+
+  // Create the aggregation pipeline
+  const pipeline = [
+    { $match: matchStage },
+    {
+      $addFields: {
+        inWishlist: {
+          $in: [userId, "$wishList"], // Adding field to indicate the product is in wishlist
+        },
+      },
+    },
+    {
+      $project: {
+        wishList: 0, // Optionally remove the wishList field from the result
+      },
+    },
+  ]
+
+  // Execute the aggregation pipeline
+  const userWishList = await Product.aggregate(pipeline)
+
+  createSuccessResponse(res, userWishList, 200)
+})
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -240,4 +425,8 @@ module.exports = {
   uploadImgToS3,
   deleteImage,
   getHomeScreenData,
+  addProductToWishList,
+  removeProductFromWishList,
+  removeProductFromWishList,
+  getUserWishList,
 }

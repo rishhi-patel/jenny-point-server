@@ -45,6 +45,12 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 1,
     },
+    wishList: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

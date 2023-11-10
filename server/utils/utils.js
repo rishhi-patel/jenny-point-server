@@ -1,3 +1,4 @@
+const { map, some } = require("lodash")
 const User = require("../models/userModel")
 
 const createSuccessResponse = (res, data, status = 200, message) => {
@@ -90,14 +91,27 @@ const getCartDetails = async (_id) => {
       },
     },
     {
+      $addFields: {
+        tax: 0,
+      },
+    },
+    {
+      $addFields: {
+        discount: 0,
+      },
+    },
+    {
       $project: {
-        _id: 0,
-        cart: 1,
+        _id: 0, // Exclude the _id field if you don't need it
+        products: "$cart.products", // This now becomes the root level in the output
         totalPrice: 1,
         totalQty: 1,
+        tax: 1,
+        discount: 1,
       },
     },
   ])
+  console.log({ cart })
   return cart[0]
 }
 const checkUserAccess = (res, userType, targetUserType) => {
@@ -228,10 +242,52 @@ const productLookup = [
     },
   },
 ]
+
+const getRatingArray = (ratings) => {
+  let result = []
+  ratings.map((elem) => {
+    if (Number(elem))
+      result = [
+        ...result,
+        Number(elem),
+        Number(`${elem}.1`),
+        Number(`${elem}.2`),
+        Number(`${elem}.3`),
+        Number(`${elem}.4`),
+        Number(`${elem}.5`),
+        Number(`${elem}.6`),
+        Number(`${elem}.7`),
+        Number(`${elem}.8`),
+        Number(`${elem}.9`),
+      ]
+  })
+  return result
+}
+const checkWishListStatus = (products, user) => {
+  let cartItems = []
+  if (user) {
+    const {
+      cart: { products },
+    } = user
+    cartItems = products
+  }
+  return map(products, (elem) => {
+    elem.inWishlist =
+      elem.wishList && user
+        ? some(elem.wishList, (wish) => wish.toString() === user._id.toString())
+        : false
+    elem.inCart = user
+      ? some(cartItems, (item) => item.value.toString() === elem._id.toString())
+      : false
+    return elem
+  })
+}
 module.exports = {
   createSuccessResponse,
   createErrorResponse,
   getCartDetails,
   checkUserAccess,
   productLookup,
+  getRatingArray,
+  checkWishListStatus,
 }

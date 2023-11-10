@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler")
-const Brand = require("../models/brandModal")
+const Brand = require("../models/brandModel")
 const awsService = require("../utils/aws")
 const { createSuccessResponse } = require("../utils/utils")
 
