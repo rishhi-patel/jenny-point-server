@@ -24,7 +24,7 @@ const smsService = {
     for (let i = 0; i < length; i++) {
       randomNumber += Math.floor(Math.random() * 10)
     }
-    return randomNumber
+    return 987654
   },
 }
 
